@@ -12,8 +12,8 @@ A Dockerized Node.js application to stream WeatherStar 4000 data into Channels D
 Build and run the container:
 
 ```bash
-docker build -t ws4channels .
-docker run --name ws4channels --restart unless-stopped --memory="400m" --cpus="0.3" -p 9798:9798 -e ZIP_CODE=your_zip_code -e WS4KP_HOST=ws4kp_host -e WS4KP_PORT=ws4kp_port ws4channels
+
+docker run -d --name ws4channels --restart unless-stopped --memory="400m" --cpus="0.3" -p 9798:9798 -e ZIP_CODE=your_zip_code -e WS4KP_HOST=ws4kp_host -e WS4KP_PORT=ws4kp_port ws4channels
 ```
 Example:
 
