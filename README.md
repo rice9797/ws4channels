@@ -11,13 +11,34 @@ A Dockerized Node.js application to stream WeatherStar 4000 data into Channels D
 
 Build and run the container:
 
+Step 1: Pull the Docker Image
+
+First, pull the latest version of the ws4channels image from GitHub Container Registry by running:
 ```bash
 
-docker run -d --name ws4channels --restart unless-stopped --memory="400m" --cpus="0.3" -p 9798:9798 -e ZIP_CODE=your_zip_code -e WS4KP_HOST=ws4kp_host -e WS4KP_PORT=ws4kp_port ws4channels
+docker pull ghcr.io/rice9797/ws4channels:latest
+```
+
+Step 2: Run the Container
+
+Next, run the container using the following command. This will start the container in detached mode and set the required environment variables.
+
+```bash
+
+docker run -d \
+  --name ws4channels \
+  --restart unless-stopped \
+  --memory="400m" \
+  --cpus="0.3" \
+  -p 9798:9798 \
+  -e ZIP_CODE=your_zip_code \
+  -e WS4KP_HOST=ws4kp_host \
+  -e WS4KP_PORT=ws4kp_port \
+  ghcr.io/rice9797/ws4channels:latest
 ```
 Example:
 
-docker run --name ws4channels --restart unless-stopped --memory="400m" --cpus="0.3" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152 ws4channels
+ --memory="400m" --cpus="0.3" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152
 
 -400m =the amount of maximum ram the container can use in mb
 
