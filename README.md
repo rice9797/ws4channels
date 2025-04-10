@@ -51,5 +51,5 @@ Accessing the Stream M3U playlist:
 
 Example:
 http://192.168.1.131:9798/playlist.m3u
-In Channels DVR use HLS for stream format and URL with above example
+In Channels DVR use MPEG-TS for stream format and URL with above example
 		•  Health check: http://localhost:9798/health
