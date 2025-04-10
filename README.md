@@ -5,8 +5,7 @@ A Dockerized Node.js application to stream WeatherStar 4000 data into Channels D
 ## Prerequisites
 - 450MB availabe RAM
 - Docker installed
-- WS4KP running (default port 8080)
-   https://weatherstar.netbymatt.com/
+- WS4KP running (default port 8080) https://github.com/netbymatt/ws4kp
 ## Usage
 
 Build and run the container:
