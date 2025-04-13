@@ -19,7 +19,12 @@ RUN apt-get update && apt-get install -y \
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
+
+# Copy application code, music, and logo files
 COPY . .
+RUN mkdir -p /app/music /app/logo
+COPY music/*.mp3 /app/music/
+COPY logo/*.png /app/logo/
 
 EXPOSE 9798
 CMD ["node", "index.js"]

@@ -9,25 +9,30 @@ const app = express();
 
 // Environment variables
 const ZIP_CODE = process.env.ZIP_CODE || '90210';
-const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost'; // New: configurable host
+const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
-const STREAM_PORT = '9798';
-const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`; // Updated to use WS4KP_HOST
+const STREAM_PORT = '9798'; // Reverted to 9798
+const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
 const CPU_CORES = process.env.CPU_CORES || '0.3';
 const RAM_LIMIT_MB = process.env.RAM_LIMIT_MB || '400';
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
+const AUDIO_DIR = path.join(__dirname, 'music');
+const LOGO_DIR = path.join(__dirname, 'logo');
 const HLS_FILE = path.join(OUTPUT_DIR, 'stream.m3u8');
 
-// Ensure output directory exists
-if (!fs.existsSync(OUTPUT_DIR)) {
-  fs.mkdirSync(OUTPUT_DIR);
-}
+// Ensure directories exist
+[OUTPUT_DIR, AUDIO_DIR, LOGO_DIR].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
+});
 
-// Serve the HLS stream
+// Serve static files
 app.use('/stream', express.static(OUTPUT_DIR));
+app.use('/logo', express.static(LOGO_DIR));
 
 // Variables to manage FFmpeg process, browser, and screenshot interval
 let ffmpegProc = null;
@@ -39,6 +44,51 @@ let isStreamReady = false;
 
 // Utility function to wait for a specified time
 const waitFor = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Function to create a looping audio input file for FFmpeg
+function createAudioInputFile() {
+  const mp3Files = [
+    '01 Weatherscan Track 26.mp3',
+    '02 Weatherscan Track 3.mp3',
+    '03 Tropical Breeze.mp3',
+    '04 Late Nite Cafe.mp3',
+    '05 Care Free.mp3',
+    '06 Weatherscan Track 14.mp3',
+    '07 Weatherscan Track 18.mp3'
+  ];
+  const audioList = mp3Files.map(file => `file '${path.join(AUDIO_DIR, file)}'`).join('\n');
+  fs.writeFileSync(path.join(__dirname, 'audio_list.txt'), audioList);
+}
+
+// Function to generate XMLTV guide data
+function generateXMLTV() {
+  const now = new Date();
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tv SYSTEM "xmltv.dtd">
+<tv>
+  <channel id="WS4000">
+    <display-name>WeatherStar 4000</display-name>
+    <icon src="http://host.docker.internal:${STREAM_PORT}/logo/ws4000.png" />
+  </channel>`;
+
+  // Generate 24 hours of hourly repeating programs
+  for (let i = 0; i < 24; i++) {
+    const startTime = new Date(now.getTime() + i * 3600 * 1000);
+    const endTime = new Date(startTime.getTime() + 3600 * 1000);
+    const start = startTime.toISOString().replace(/[-:T]/g, '').split('.')[0] + ' +0000';
+    const end = endTime.toISOString().replace(/[-:T]/g, '').split('.')[0] + ' +0000';
+    xml += `
+  <programme start="${start}" end="${end}" channel="WS4000">
+    <title lang="en">Local Weather</title>
+    <desc lang="en">Enjoy your local weather with a touch of nostalgia.</desc>
+    <icon src="http://host.docker.internal:${STREAM_PORT}/logo/ws4000.png" />
+  </programme>`;
+  }
+
+  xml += `
+</tv>`;
+  return xml;
+}
 
 // Function to start the browser and navigate to ws4kp
 async function startBrowser() {
@@ -126,18 +176,29 @@ async function startBrowser() {
   console.log('Set viewport to 1280x720');
 }
 
-// Function to start FFmpeg transcoding and keep it running
+// Function to start FFmpeg transcoding with audio
 async function startTranscoding() {
   await startBrowser();
+  createAudioInputFile();
 
   ffmpegStream = new PassThrough();
 
-  ffmpegProc = ffmpeg(ffmpegStream)
+  ffmpegProc = ffmpeg()
+    .input(ffmpegStream)
     .inputFormat('image2pipe')
     .inputOptions([`-framerate ${FRAME_RATE}`])
+    .input(path.join(__dirname, 'audio_list.txt'))
+    .inputOptions(['-f concat', '-safe 0', '-stream_loop -1'])
+    .complexFilter([
+      '[0:v]scale=1280:720[v]',
+      '[1:a]volume=0.5[a]'
+    ])
     .outputOptions([
-      '-vf scale=1280:720',
+      '-map [v]',
+      '-map [a]',
       '-c:v libx264',
+      '-c:a aac',
+      '-b:a 128k',
       '-preset ultrafast',
       '-b:v 1000k',
       '-f hls',
@@ -147,7 +208,7 @@ async function startTranscoding() {
     ])
     .output(HLS_FILE)
     .on('start', () => {
-      console.log('Started FFmpeg streaming');
+      console.log('Started FFmpeg streaming with audio');
       setTimeout(() => {
         isStreamReady = true;
         console.log('HLS stream is ready');
@@ -185,7 +246,7 @@ async function startTranscoding() {
       }
       const screenshot = await page.screenshot({
         type: 'jpeg',
-        clip: { x: 0, y: 40, width: 656, height: 480 }
+        clip: { x: 11, y: 40, width: 631, height: 480 }
       });
       ffmpegStream.write(screenshot);
     } catch (err) {
@@ -206,11 +267,17 @@ async function startTranscoding() {
 app.get('/playlist.m3u', (req, res) => {
   const host = req.hostname === 'localhost' ? 'host.docker.internal' : req.hostname;
   const m3uContent = `#EXTM3U
-#EXTINF:-1,WeatherStar 4000
+#EXTINF:-1 channel-id="WS4000" tvg-id="275" tvg-chno="275" tvc-guide-placeholders="3600" tvc-guide-title="Local Weather" tvc-guide-description="Enjoy your local weather with a touch of nostalgia." tvc-guide-art="http://${host}:${STREAM_PORT}/logo/ws4000.png" tvg-logo="http://${host}:${STREAM_PORT}/logo/ws4000.png",WeatherStar 4000
 http://${host}:${STREAM_PORT}/stream/stream.m3u8
 `;
   res.set('Content-Type', 'application/vnd.apple.mpegurl');
   res.send(m3uContent);
+});
+
+// Endpoint to provide XMLTV guide
+app.get('/guide.xml', (req, res) => {
+  res.set('Content-Type', 'application/xml');
+  res.send(generateXMLTV());
 });
 
 // Health check endpoint
@@ -225,6 +292,7 @@ console.log(`Running with CPU cores: ${CPU_CORES}, RAM limit: ${RAM_LIMIT_MB}MB`
 app.listen(STREAM_PORT, async () => {
   console.log(`Streaming server running on port ${STREAM_PORT}`);
   console.log(`M3U playlist available at http://localhost:${STREAM_PORT}/playlist.m3u`);
+  console.log(`XMLTV guide available at http://localhost:${STREAM_PORT}/guide.xml`);
   console.log(`Health check available at http://localhost:${STREAM_PORT}/health`);
   await startTranscoding();
 });
