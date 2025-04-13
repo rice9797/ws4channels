@@ -91,9 +91,14 @@ Latest additions
  -Includes seven looping jazz tracks as background music.
  
 -Provides an XMLTV guide with hourly “Local Weather” entries.
+
+-Added guide logo 
  
 -Optimized cropping for a clean video feed by removing white bars.
 
-- Changed default cpu and memory limits to 1 cpu core and 1gb ram. Adjust if your system requires.
-About
+-Changed default cpu and memory limits to 1 cpu core and 1gb ram. Adjust if your system requires.
+
+  
+About:
+
 A nostalgic weather streaming solution for Channels DVR, built with Node.js, Puppeteer, and FFmpeg.
