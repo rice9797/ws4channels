@@ -82,6 +82,7 @@ In Channels DVR, use MPEG-TS format with this URL.
   XMLTV Guide:
   
 	http://<ip.of.pc.running.ws4channels>:9798/guide.xml
+ 
 Example: http://192.168.1.131:9798/guide.xml
 
 
