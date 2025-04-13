@@ -73,7 +73,7 @@ Accessing the Stream
 
 M3U Playlist: 
 
-	• http://<ip.of.pc.running.ws4channels>:9798/playlist.m3u
+	http://<ip.of.pc.running.ws4channels>:9798/playlist.m3u
  
 Example: http://192.168.1.131:9798/playlist.m3u
 In Channels DVR, use MPEG-TS format with this URL.
@@ -81,7 +81,7 @@ In Channels DVR, use MPEG-TS format with this URL.
   Guide Data
   XMLTV Guide:
   
-	• http://<ip.of.pc.running.ws4channels>:9798/guide.xml
+	http://<ip.of.pc.running.ws4channels>:9798/guide.xml
 Example: http://192.168.1.131:9798/guide.xml
 
 
