@@ -38,11 +38,11 @@ docker run -d \
 ```
 Example:
 
- --memory="400m" --cpus="0.3" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152
+ --memory="1096" --cpus="1.0" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152 
 
--400m =the amount of maximum ram the container can use in mb
+-1096=the amount of maximum ram the container can use in mb
 
--0.3= amount of cpu maximum default 1/3 of a core
+-1.0= maximum amount of cpu cores the container can use. Default is 1 core
 
 -63101= enter your zip code 
 
@@ -53,24 +53,47 @@ Example:
 
 Environment Variables
 
-		•  ZIP_CODE: Your ZIP code (default: 90210)
-  
-		•  WS4KP_HOST: Host running WS4KP (default: localhost)
-  
-		•  WS4KP_PORT: Port for WS4KP (default: 8080)
-  
-		•  CPU_CORES: CPU limit (default: 0.3)
-  
-		•  RAM_LIMIT_MB: RAM limit in MB (default: 400)
-  
-		•  FRAME_RATE: Stream frame rate (default: 10)
+	•  ZIP_CODE: Your ZIP code (default: 90210)
+ 
+	•  WS4KP_HOST: Host running WS4KP (default: localhost)
+ 
+	•  WS4KP_PORT: Port for WS4KP (default: 8080)
+ 
+	•  --cpus: CPU limit (default: 1.0)
+ 
+	•  --memory: RAM limit in MB (default: 1096)
+ 
+	•  FRAME_RATE: Stream frame rate (default: 10)
+ 
 
+
+
+
+Accessing the Stream
+
+
+M3U Playlist: 
+
+	• http://<ip.of.pc.running.ws4channels>:9798/playlist.m3u
+ 
+Example: http://192.168.1.131:9798/playlist.m3u
+In Channels DVR, use MPEG-TS format with this URL.
+
+  Guide Data
+  XMLTV Guide:
   
-Accessing the Stream M3U playlist:
+	• http://<ip.of.pc.running.ws4channels>:9798/guide.xml
+Example: http://192.168.1.131:9798/guide.xml
 
-		http://ip.of.pc.running.ws4channels:9798/playlist.m3u
 
-Example:
-http://192.168.1.131:9798/playlist.m3u
-In Channels DVR use MPEG-TS for stream format and URL with above example
-		•  Health check: http://localhost:9798/health
+Latest additions
+ 
+ -Includes seven looping jazz tracks as background music.
+ 
+-Provides an XMLTV guide with hourly “Local Weather” entries.
+ 
+-Optimized cropping for a clean video feed by removing white bars.
+
+- Changed default cpu and memory limits to 1 cpu core and 1gb ram. Adjust if your system requires.
+About
+A nostalgic weather streaming solution for Channels DVR, built with Node.js, Puppeteer, and FFmpeg.
