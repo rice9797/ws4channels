@@ -28,8 +28,8 @@ Next, run the container using the following command. This will start the contain
 docker run -d \
   --name ws4channels \
   --restart unless-stopped \
-  --memory="400m" \
-  --cpus="0.3" \
+  --memory="1096" \
+  --cpus="1.0" \
   -p 9798:9798 \
   -e ZIP_CODE=your_zip_code \
   -e WS4KP_HOST=ws4kp_host \
