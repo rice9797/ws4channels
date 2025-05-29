@@ -28,7 +28,7 @@ Next, run the container using the following command. This will start the contain
 docker run -d \
   --name ws4channels \
   --restart unless-stopped \
-  --memory="1096" \
+  --memory="1096m" \
   --cpus="1.0" \
   -p 9798:9798 \
   -e ZIP_CODE=your_zip_code \
@@ -38,9 +38,9 @@ docker run -d \
 ```
 Example:
 
- --memory="1096" --cpus="1.0" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152 
+ --memory="1096m" --cpus="1.0" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152 
 
--1096=the amount of maximum ram the container can use in mb
+-1096m=the amount of maximum ram the container can use in mb
 
 -1.0= maximum amount of cpu cores the container can use. Default is 1 core
 
