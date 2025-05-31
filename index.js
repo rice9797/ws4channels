@@ -61,14 +61,15 @@ function createAudioInputFile() {
 }
 
 // Function to generate XMLTV guide data
-function generateXMLTV() {
+function generateXMLTV(hostname) {
   const now = new Date();
+  const host = hostname === 'localhost' ? 'host.docker.internal' : hostname;
   let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE tv SYSTEM "xmltv.dtd">
 <tv>
   <channel id="WS4000">
     <display-name>WeatherStar 4000</display-name>
-    <icon src="http://host.docker.internal:${STREAM_PORT}/logo/ws4000.png" />
+    <icon src="http://${host}:${STREAM_PORT}/logo/ws4000.png" />
   </channel>`;
 
   // Generate 24 hours of hourly repeating programs
@@ -81,7 +82,7 @@ function generateXMLTV() {
   <programme start="${start}" end="${end}" channel="WS4000">
     <title lang="en">Local Weather</title>
     <desc lang="en">Enjoy your local weather with a touch of nostalgia.</desc>
-    <icon src="http://host.docker.internal:${STREAM_PORT}/logo/ws4000.png" />
+    <icon src="http://${host}:${STREAM_PORT}/logo/ws4000.png" />
   </programme>`;
   }
 
@@ -277,7 +278,7 @@ http://${host}:${STREAM_PORT}/stream/stream.m3u8
 // Endpoint to provide XMLTV guide
 app.get('/guide.xml', (req, res) => {
   res.set('Content-Type', 'application/xml');
-  res.send(generateXMLTV());
+  res.send(generateXMLTV(req.hostname));
 });
 
 // Health check endpoint
