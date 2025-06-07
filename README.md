@@ -1,15 +1,6 @@
 # Known Bugs
 
-If possible use the default port during setup of ws4channels.  When using an alternate port the code is not correctly identifing this change in the m3u. You can setup with an alternate port but you must then edit the m3u. In Channels DVR the easiest way to do this is to select text when building the source and use the following as an example for port 9532:  
-```bash
-
-#EXTM3U
-#EXTINF:-1 channel-id="WS4000" tvg-id="275" tvg-chno="275" tvc-guide-placeholders="3600" tvc-guide-title="Local Weather" tvc-guide-description="Enjoy your local weather with a touch of nostalgia." tvc-guide-art="http://ip.of.machine.running.ws4channels:9532/logo/ws4000.png" tvg-logo="http://ip.of.machine.running.ws4channels:9532/logo/ws4000.png",WeatherStar 4000
-http://ip.of.machine.running.ws4channels:9532/stream/stream.m3u8
-
-```
-
-Log Bug: The container logs do not correctly report the actual settings of cpu count and alloted memory.  The container does respect the settings made in the enviorment variables though.
+None at this time. Latest update(6-7-2025) should fix past issues of errors when running the container on a port different then default, incorrect cpu/ram stats in logs, and a rare memory leak.
 
 # ws4channels
 
