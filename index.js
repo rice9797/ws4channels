@@ -62,7 +62,8 @@ function getContainerLimits() {
 }
 
 function createAudioInputFile() {
-  const mp3Files = [
+  // Default MP3 files to use if AUDIO_DIR is empty or inaccessible
+  const defaultMp3s = [
     '01 Weatherscan Track 26.mp3',
     '02 Weatherscan Track 3.mp3',
     '03 Tropical Breeze.mp3',
@@ -71,8 +72,27 @@ function createAudioInputFile() {
     '06 Weatherscan Track 14.mp3',
     '07 Weatherscan Track 18.mp3'
   ];
-  const audioList = mp3Files.map(file => `file '${path.join(AUDIO_DIR, file)}'`).join('\n');
+
+  let files = [];
+  try {
+    // Read only MP3 files from AUDIO_DIR
+    files = fs.readdirSync(AUDIO_DIR).filter(file => file.toLowerCase().endsWith('.mp3'));
+    if (files.length === 0) {
+      console.warn('No MP3 files found in music directory; using default music list');
+      files = defaultMp3s;
+    }
+  } catch (err) {
+    console.error(`Failed to read music directory: ${err.message}`);
+    console.warn('Using default music list due to error');
+    files = defaultMp3s;
+  }
+
+  console.log(`Loaded ${files.length} music files`);
+  const audioList = files.map(file => `file '${path.join(AUDIO_DIR, file)}'`).join('\n');
   fs.writeFileSync(path.join(__dirname, 'audio_list.txt'), audioList);
+
+  // Note: Update README to inform users they can add MP3 files to the 'music' folder
+  // and that the default files (listed above) are used if no MP3s are found.
 }
 
 function generateXMLTV(host) {
@@ -161,7 +181,7 @@ async function startTranscoding() {
       '-c:a aac',
       '-b:a 128k',
       '-preset ultrafast',
-      '-b:v 1000k',
+      '-b:v 1000k “,
       '-f hls',
       '-hls_time 2',
       '-hls_list_size 2',
