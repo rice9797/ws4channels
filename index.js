@@ -181,7 +181,7 @@ async function startTranscoding() {
       '-c:a aac',
       '-b:a 128k',
       '-preset ultrafast',
-      '-b:v 1000k “,
+      '-b:v 1000k',
       '-f hls',
       '-hls_time 2',
       '-hls_list_size 2',
