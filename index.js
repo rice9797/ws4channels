@@ -62,16 +62,9 @@ function getContainerLimits() {
 }
 
 function createAudioInputFile() {
-  const mp3Files = [
-    '01 Weatherscan Track 26.mp3',
-    '02 Weatherscan Track 3.mp3',
-    '03 Tropical Breeze.mp3',
-    '04 Late Nite Cafe.mp3',
-    '05 Care Free.mp3',
-    '06 Weatherscan Track 14.mp3',
-    '07 Weatherscan Track 18.mp3'
-  ];
-  const audioList = mp3Files.map(file => `file '${path.join(AUDIO_DIR, file)}'`).join('\n');
+  var files = fs.readdirSync(AUDIO_DIR);
+  console.log(`Loaded ${files.length} music files`)
+  const audioList = files.map(file => `file '${path.join(AUDIO_DIR, file)}'`).join('\n');
   fs.writeFileSync(path.join(__dirname, 'audio_list.txt'), audioList);
 }
 
