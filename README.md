@@ -92,7 +92,23 @@ Example: http://192.168.1.131:9798/guide.xml
 
 
 Latest additions
+ 6/21/25 Update:
+  ## Music Configuration
+- The application plays MP3 files from the `music` folder in the project root.
+- Default tracks included:
+  - 01 Weatherscan Track 26.mp3
+  - 02 Weatherscan Track 3.mp3
+  - 03 Tropical Breeze.mp3
+  - 04 Late Nite Cafe.mp3
+  - 05 Care Free.mp3
+  - 06 Weatherscan Track 14.mp3
+  - 07 Weatherscan Track 18.mp3
+- To customize, add your own MP3 files to the `music` folder. Only `.mp3` files are included in the stream.
+- If no MP3s are found, the default tracks are used.
+- After adding your mp3 tracks to the music folder restart the container so the app will pick up the new music. 
  
+ Prior Updates:
+
  -Includes seven looping jazz tracks as background music.
  
 -Provides an XMLTV guide with hourly “Local Weather” entries.
