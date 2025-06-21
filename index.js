@@ -12,6 +12,7 @@ const ZIP_CODE = process.env.ZIP_CODE || '90210';
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
 const STREAM_PORT = process.env.STREAM_PORT || '9798';
+const SS_QUALITY = process.env.SS_QUALITY || 75;
 const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
@@ -194,7 +195,8 @@ async function startTranscoding() {
       }
       const screenshot = await page.screenshot({
         type: 'jpeg',
-        clip: { x: 11, y: 40, width: 631, height: 480 }
+        clip: { x: 11, y: 40, width: 631, height: 480 },
+        quality: SS_QUALITY
       });
       ffmpegStream.write(screenshot);
     } catch (err) {
