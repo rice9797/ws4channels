@@ -15,6 +15,7 @@ const STREAM_PORT = process.env.STREAM_PORT || '9798';
 const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
+const VIDEO_OPTIONS = process.env.VIDEO_OPTIONS || "-c:v libx264 -b:v 1000k -preset ultrafast";
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const AUDIO_DIR = path.join(__dirname, 'music');
@@ -164,6 +165,8 @@ async function startTranscoding() {
 
   ffmpegStream = new PassThrough();
 
+  const videoOptions = VIDEO_OPTIONS.trim().split(/\s+/).filter(Boolean);
+
   ffmpegProc = ffmpeg()
     .input(ffmpegStream)
     .inputFormat('image2pipe')
@@ -177,19 +180,17 @@ async function startTranscoding() {
     .outputOptions([
       '-map [v]',
       '-map [a]',
-      '-c:v libx264',
+      ...videoOptions,
       '-c:a aac',
       '-b:a 128k',
-      '-preset ultrafast',
-      '-b:v 1000k',
       '-f hls',
       '-hls_time 2',
       '-hls_list_size 2',
       '-hls_flags delete_segments'
     ])
     .output(HLS_FILE)
-    .on('start', () => {
-      console.log('Started FFmpeg');
+    .on('start', (cmdline) => {
+      console.log(`Started FFmpeg:  ${cmdline}`);
       setTimeout(() => isStreamReady = true, HLS_SETUP_DELAY);
     })
     .on('error', async (err) => {
