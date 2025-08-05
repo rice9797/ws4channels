@@ -3,7 +3,7 @@
 Merged pull request from @jasongdove to attempt hardware acceleration.  His instructions are as follows: 
 
 To test with NVIDIA, I included --gpus all on my run command, as well as the env var -e "VIDEO_OPTIONS=-c:v h264_nvenc -pix_fmt yuv420p -b:v 2000k".
-I personally have not tested this.  See issue #11 for context.  
+I personally have not had time to test this.  See issue #11 for context.  
 
 # Known Bugs
 
