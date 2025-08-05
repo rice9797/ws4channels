@@ -3,7 +3,7 @@ name: Build and Publish Docker Image
 on:
   push:
     branches:
-      - main  # Triggers when you merge into main
+      - master  # Triggers when you merge into main
 
 jobs:
   build:
