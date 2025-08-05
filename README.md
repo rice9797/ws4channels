@@ -1,3 +1,9 @@
+# Latest Update
+
+Merged pull request from @jasongdove to attempt hardware acceleration.  His instructions are as follows: 
+To test with NVIDIA, I included --gpus all on my run command, as well as the env var -e "VIDEO_OPTIONS=-c:v h264_nvenc -pix_fmt yuv420p -b:v 2000k".
+I personally have not tested this. 
+
 # Known Bugs
 
 None at this time. Latest update(6-7-2025) should fix past issues of errors when running the container on a port different then default, incorrect cpu/ram stats in logs, and a rare memory leak.
