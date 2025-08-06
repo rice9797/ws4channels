@@ -77,10 +77,36 @@ Environment Variables
 	•  FRAME_RATE: Stream frame rate (default: 10)
  
 
+##  Hardware Acceleration Support
+
+This project supports hardware-accelerated video encoding using `ffmpeg`. To enable it, override the `VIDEO_OPTIONS` environment variable when running the container.
+
+### Intel Quick Sync (QSV)
+```bash
+
+--device=/dev/dri \
+-e VIDEO_OPTIONS="-c:v h264_qsv -b:v 1000k"
+```
+### Nvidia NVENC
+```bash
+
+--gpus all \
+-e VIDEO_OPTIONS="-c:v h264_nvenc -b:v 1000k"
+```
+
+### AMD VAAPI
+
+```bash
+
+--device=/dev/dri \
+-e VIDEO_OPTIONS="-vaapi_device /dev/dri/renderD128 -c:v h264_vaapi -b:v 1000k -vf format=nv12,hwupload"
+
+```
+Docker containers must have access to GPU devices (--gpus all or --device=/dev/dri).
+ 
 
 
-
-Accessing the Stream
+### Accessing the Stream
 
 
 M3U Playlist: 
