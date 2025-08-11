@@ -1,5 +1,6 @@
 # Latest Update
 
+Reverted back to original amd64 only image do to bugs from merged jasongdove. 
 Merged pull request from @jasongdove to attempt hardware acceleration.  His instructions are as follows: 
 
 To test with NVIDIA, I included --gpus all on my run command, as well as the env var -e "VIDEO_OPTIONS=-c:v h264_nvenc -pix_fmt yuv420p -b:v 2000k".
@@ -7,7 +8,7 @@ I personally have not had time to test this.  See issue #11 for context.
 
 # Known Bugs
 
-None at this time. Latest update(6-7-2025) should fix past issues of errors when running the container on a port different then default, incorrect cpu/ram stats in logs, and a rare memory leak.
+After reverting back from buggy merge the latest tag doesnt seem to be working. 
 
 # ws4channels
 
@@ -27,7 +28,7 @@ Step 1: Pull the Docker Image
 First, pull the latest version of the ws4channels image from GitHub Container Registry by running:
 ```bash
 
-docker pull ghcr.io/rice9797/ws4channels:latest
+docker pull ghcr.io/rice9797/ws4channels@sha256:8d68bacc7bbe33e2edf9c6bb050fe09a502ea9badb0df0f08b6d0ca28a9842a7
 ```
 
 Step 2: Run the Container
@@ -78,6 +79,8 @@ Environment Variables
  
 
 ##  Hardware Acceleration Support
+
+Update!! Currently hardware encoding and Multi Arch are not supported. I'm leaving these instructions up in case I can get them working or if those images from the past are still working for others. 
 
 This project supports hardware-accelerated video encoding using `ffmpeg`. To enable it, override the `VIDEO_OPTIONS` environment variable when running the container.
 
