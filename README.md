@@ -1,6 +1,7 @@
 # Latest Update
 
-Reverted back to original amd64 only image do to bugs from merged jasongdove. 
+Reverted back to original amd64 only image due to bugs from merged jasongdove. Use image below instead of Latest tag. 
+
 Merged pull request from @jasongdove to attempt hardware acceleration.  His instructions are as follows: 
 
 To test with NVIDIA, I included --gpus all on my run command, as well as the env var -e "VIDEO_OPTIONS=-c:v h264_nvenc -pix_fmt yuv420p -b:v 2000k".
@@ -8,7 +9,7 @@ I personally have not had time to test this.  See issue #11 for context.
 
 # Known Bugs
 
-After reverting back from buggy merge the latest tag doesnt seem to be working. 
+After reverting back from buggy merge the latest tag is not working. 
 
 # ws4channels
 
@@ -46,7 +47,7 @@ docker run -d \
   -e ZIP_CODE=your_zip_code \
   -e WS4KP_HOST=ws4kp_host \
   -e WS4KP_PORT=ws4kp_port \
-  ghcr.io/rice9797/ws4channels:latest
+http://ghcr.io/rice9797/ws4channels@sha256:8d68bacc7bbe33e2edf9c6bb050fe09a502ea9badb0df0f08b6d0ca28a9842a7
 ```
 Example:
 
