@@ -1,5 +1,7 @@
 # Latest Update
 
+Merged pull request from @jacroe to try to solve some users having issues with white bars. I never experienced these white bars on the sides. Use the "latest" tag to try this version out and please let me know if you have issues. Hopefully his changes correct it for users with the issue.  I have not tested this version as of yet. 
+
 Reverted back to original amd64 only image due to bugs from merged jasongdove. Use image below instead of Latest tag. 
 
 Merged pull request from @jasongdove to attempt hardware acceleration.  His instructions are as follows: 
@@ -9,7 +11,7 @@ I personally have not had time to test this.  See issue #11 for context.
 
 # Known Bugs
 
-After reverting back from buggy merge the latest tag is not working. 
+Some users report white lines on top and right side of the video after a buggy merge.  The latest tag is the attempt to fix this. 
 
 # ws4channels
 
@@ -31,6 +33,13 @@ First, pull the latest version of the ws4channels image from GitHub Container Re
 
 docker pull ghcr.io/rice9797/ws4channels@sha256:8d68bacc7bbe33e2edf9c6bb050fe09a502ea9badb0df0f08b6d0ca28a9842a7
 ```
+Or for Latest tag version:
+
+```bash
+
+docker pull ghcr.io/rice9797/ws4channels:latest
+```
+If you use the latest tag remember to change the docker run command to use latest tag instead of the sha256 in the example below. 
 
 Step 2: Run the Container
 
