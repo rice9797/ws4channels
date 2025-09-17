@@ -1,6 +1,6 @@
 # Latest Update
 
-Attempt to fix sime users reporting MaxListenersExceeded warning. This latest version is untested as I use an older version of ws4kp. Let me know of there are any issues with this build. 
+Attempt to fix some users reporting MaxListenersExceeded warning. This latest version is untested as I use an older version of ws4kp. Let me know of there are any issues with this build. 
 
 If you are using the recent versions 6.0+ of ws4kp use the "latest" tag.  This version adjusts the crop to fix white lines on the top and right. if you are using older ws4kp use the SHA listed below. 
 
