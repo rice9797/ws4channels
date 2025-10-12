@@ -38,6 +38,16 @@ let isStreamReady = false;
 
 const waitFor = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper: Fisher–Yates shuffle
+function shuffleArray(array) {
+  const arr = array.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function getContainerLimits() {
   let cpuQuotaPath = '/sys/fs/cgroup/cpu.max';
   let memLimitPath = '/sys/fs/cgroup/memory.max';
@@ -86,10 +96,17 @@ function createAudioInputFile() {
     console.warn('Using default music list due to error');
     files = defaultMp3s;
   }
+  
+  // Shuffle if requested
+  if (process.env.SHUFFLE_MUSIC?.toLowerCase() === 'true') {
+    files = shuffleArray(files);
+    console.log('Shuffled music list based on SHUFFLE_MUSIC=true');
+  }
 
   console.log(`Loaded ${files.length} music files`);
   const audioList = files.map(file => `file '${path.join(AUDIO_DIR, file)}'`).join('\n');
   fs.writeFileSync(path.join(__dirname, 'audio_list.txt'), audioList);
+
 
   // Note: Update README to inform users they can add MP3 files to the 'music' folder
   // and that the default files (listed above) are used if no MP3s are found.
