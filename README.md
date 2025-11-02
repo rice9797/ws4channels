@@ -90,6 +90,8 @@ Environment Variables
 	•  --memory: RAM limit in MB (default: 1096)
  
 	•  FRAME_RATE: Stream frame rate (default: 10)
+
+	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
  
 
 ##  Hardware Acceleration Support
