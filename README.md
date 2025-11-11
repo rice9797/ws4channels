@@ -176,4 +176,4 @@ About:
 
 A nostalgic weather streaming solution for Channels DVR, built with Node.js, Puppeteer, and FFmpeg.
 
-     buymeacoffee.com/rice9797
+[Buy me a coffee ☕](https://www.buymeacoffee.com/rice9797)
