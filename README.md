@@ -1,6 +1,6 @@
 # Latest Update
 
-Attempt to fix some users reporting MaxListenersExceeded warning. This latest version is untested as I use an older version of ws4kp. Let me know of there are any issues with this build. 
+Fixed some users reporting MaxListenersExceeded warning. 
 
 If you are using the recent versions 6.0+ of ws4kp use the "latest" tag.  This version adjusts the crop to fix white lines on the top and right. if you are using older ws4kp use the SHA listed below. 
 
@@ -15,7 +15,7 @@ I personally have not had time to test this.  See issue #11 for context.
 
 # Known Bugs
 
-Some users report white lines on top and right side of the video after a buggy merge.  The latest tag is the attempt to fix this. 
+Some users report white lines on top and right side of the video after a buggy merge.  The latest tag will to fix this. 
 
 # ws4channels
 
@@ -175,3 +175,5 @@ Latest additions
 About:
 
 A nostalgic weather streaming solution for Channels DVR, built with Node.js, Puppeteer, and FFmpeg.
+
+     buymeacoffee.com/rice9797
