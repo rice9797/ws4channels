@@ -2,7 +2,7 @@
 
 Fixed some users reporting MaxListenersExceeded warning. 
 
-If you are using the recent versions 6.0+ of ws4kp use the "latest" tag.  This version adjusts the crop to fix white lines on the top and right. if you are using older ws4kp use the SHA listed below. 
+If you are using the recent versions 6.0+ of ws4kp use the "latest" tag.  This version adjusts the crop to fix white lines on the top and right. If you are using older ws4kp use the SHA listed below. 
 
 Merged pull request from @jacroe to try to solve some users having issues with white bars. I never experienced these white bars on the sides. Use the "latest" tag to try this version out and please let me know if you have issues. Hopefully his changes correct it for users with the issue.  I have not tested this version as of yet. 
 
@@ -32,7 +32,7 @@ Build and run the container:
 
 Step 1: Pull the Docker Image
 
-First, pull the latest version of the ws4channels image from GitHub Container Registry by running:
+If you are using the recent versions 6.0+ of ws4kp use the "latest" tag. This version adjusts the crop to fix white lines on the top and right. If you are using older ws4kp use the SHA listed below.
 ```bash
 
 docker pull ghcr.io/rice9797/ws4channels@sha256:8d68bacc7bbe33e2edf9c6bb050fe09a502ea9badb0df0f08b6d0ca28a9842a7
