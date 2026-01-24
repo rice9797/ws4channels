@@ -2,3 +2,4 @@ node_modules
 output
 audio_list.txt
 compose.yaml
+.vs/

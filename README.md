@@ -1,8 +1,8 @@
 # Latest Update
 
-Attempt to fix some users reporting MaxListenersExceeded warning. This latest version is untested as I use an older version of ws4kp. Let me know of there are any issues with this build.
+Fixed some users reporting MaxListenersExceeded warning. 
 
-If you are using the recent versions 6.0+ of ws4kp use the "latest" tag.  This version adjusts the crop to fix white lines on the top and right. if you are using older ws4kp use the SHA listed below.
+If you are using the recent versions 6.0+ of ws4kp use the "latest" tag.  This version adjusts the crop to fix white lines on the top and right. If you are using older ws4kp use the SHA listed below. 
 
 Merged pull request from @jacroe to try to solve some users having issues with white bars. I never experienced these white bars on the sides. Use the "latest" tag to try this version out and please let me know if you have issues. Hopefully his changes correct it for users with the issue.  I have not tested this version as of yet.
 
@@ -15,7 +15,7 @@ I personally have not had time to test this.  See issue #11 for context.
 
 # Known Bugs
 
-Some users report white lines on top and right side of the video after a buggy merge.  The latest tag is the attempt to fix this.
+Some users report white lines on top and right side of the video after a buggy merge.  The latest tag will to fix this. 
 
 # ws4channels
 
@@ -34,8 +34,7 @@ Build and run the container:
 
 Step 1: Pull the Docker Image
 
-First, pull the latest version of the ws4channels image from GitHub Container Registry by running:
-
+If you are using the recent versions 6.0+ of ws4kp use the "latest" tag. This version adjusts the crop to fix white lines on the top and right. If you are using older ws4kp use the SHA listed below.
 ```bash
 
 docker pull ghcr.io/rice9797/ws4channels@sha256:8d68bacc7bbe33e2edf9c6bb050fe09a502ea9badb0df0f08b6d0ca28a9842a7
@@ -84,17 +83,20 @@ Example:
 
 Environment Variables
 
- •  ZIP_CODE: Your ZIP code (default: 90210)
+	•  ZIP_CODE: Your ZIP code (default: 90210)
+ 
+	•  WS4KP_HOST: Host running WS4KP (default: localhost)
+ 
+	•  WS4KP_PORT: Port for WS4KP (default: 8080)
+ 
+	•  --cpus: CPU limit (default: 1.0)
+ 
+	•  --memory: RAM limit in MB (default: 1096)
+ 
+	•  FRAME_RATE: Stream frame rate (default: 10)
 
- •  WS4KP_HOST: Host running WS4KP (default: localhost)
-
- •  WS4KP_PORT: Port for WS4KP (default: 8080)
-
- •  --cpus: CPU limit (default: 1.0)
-
- •  --memory: RAM limit in MB (default: 1096)
-
- •  FRAME_RATE: Stream frame rate (default: 10)
+	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
+ 
 
  •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
 
@@ -180,3 +182,5 @@ Latest additions
 About:
 
 A nostalgic weather streaming solution for Channels DVR, built with Node.js, Puppeteer, and FFmpeg.
+
+[Buy me a coffee ☕](https://www.buymeacoffee.com/rice9797)
