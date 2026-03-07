@@ -97,30 +97,45 @@ function createAudioInputFile() {
 }
 
 function generateXMLTV(host) {
-  const now = new Date();
   const baseUrl = `http://${host}`;
-  let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE tv SYSTEM "xmltv.dtd">
-<tv>
-<channel id="WS4000">
-<display-name>WeatherStar 4000</display-name>
-<icon src="${baseUrl}/logo/ws4000.png" />
-</channel>`;
 
-  for (let i = 0; i < 24; i++) {
+  // Round down to the top of the current hour so guide slots line up cleanly
+  const now = new Date();
+  now.setUTCMinutes(0, 0, 0);
+
+  // Give Jellyfin more than 24h so the guide stays populated longer
+  const hours = 72;
+
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>
+<tv generator-info-name="ws4channels" source-info-name="ws4channels">
+  <channel id="WS4000">
+    <display-name lang="en">WeatherStar 4000</display-name>
+    <display-name lang="en">${chnlNum} WeatherStar 4000</display-name>
+    <icon src="${baseUrl}/logo/ws4000.png" />
+  </channel>`;
+
+  for (let i = 0; i < hours; i++) {
     const startTime = new Date(now.getTime() + i * 3600 * 1000);
     const endTime = new Date(startTime.getTime() + 3600 * 1000);
-    const start = startTime.toISOString().replace(/[-:T]/g, '').split('.')[0] + ' +0000';
-    const end = endTime.toISOString().replace(/[-:T]/g, '').split('.')[0] + ' +0000';
+
+    const start =
+      startTime.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, " +0000");
+    const end =
+      endTime.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, " +0000");
+
     xml += `
-<programme start="${start}" end="${end}" channel="WS4000">
-<title lang="en">Local Weather</title>
-<desc lang="en">Enjoy your local weather with a touch of nostalgia.</desc>
-<icon src="${baseUrl}/logo/ws4000.png" />
-</programme>`;
+  <programme start="${start}" end="${end}" channel="WS4000">
+    <title lang="en">Local Weather</title>
+    <sub-title lang="en">WeatherStar 4000</sub-title>
+    <desc lang="en">Enjoy your local weather with a touch of nostalgia.</desc>
+    <category lang="en">Weather</category>
+    <icon src="${baseUrl}/logo/ws4000.png" />
+  </programme>`;
   }
 
-  xml += `</tv>`;
+  xml += `
+</tv>`;
+
   return xml;
 }
 
