@@ -258,17 +258,23 @@ async function stopTranscoding() {
 app.get('/playlist.m3u', (req, res) => {
   const host = req.headers.host || `localhost:${STREAM_PORT}`;
   const baseUrl = `http://${host}`;
+
   const m3uContent = `#EXTM3U
-#EXTINF:-1 channel-id="WS4000" tvg-id="WS4000" tvg-chno="${chnlNum}" tvc-guide-placeholders="3600" tvc-guide-title="Local Weather" tvc-guide-description="Enjoy your local weather with a touch of nostalgia." tvc-guide-art="${baseUrl}/logo/ws4000.png" tvg-logo="${baseUrl}/logo/ws4000.png",WeatherStar 4000
+#EXTINF:-1 tvg-id="WS4000" tvg-name="WeatherStar 4000" tvg-chno="${chnlNum}" tvg-logo="${baseUrl}/logo/ws4000.png" channel-id="WS4000",WeatherStar 4000
 ${baseUrl}/stream/stream.m3u8
 `;
-  res.set('Content-Type', 'application/x-mpegURL');
+
+  res.set('Content-Type', 'application/x-mpegURL; charset=utf-8');
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.send(m3uContent);
 });
 
 app.get('/guide.xml', (req, res) => {
   const host = req.headers.host || `localhost:${STREAM_PORT}`;
-  res.set('Content-Type', 'application/xml');
+  res.set('Content-Type', 'application/xml; charset=utf-8');
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
   res.send(generateXMLTV(host));
 });
 
