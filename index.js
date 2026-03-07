@@ -8,11 +8,35 @@ const os = require('os');
 
 const app = express();
 
-const ZIP_CODE = process.env.ZIP_CODE || '90210';
+// options
+const WS4KP_HAZARDS = process.env.WS4KP_HAZARDS || true; // ?hazards-checkbox=true
+const WS4KP_LATEST = process.env.WS4KP_LATEST || true; // &latest-observations-checkbox=true
+const WS4KP_HOURLY = process.env.WS4KP_HOURLY || false; // &hourly-checkbox=false
+const WS4KP_HOURLYGRAPH = process.env.WS4KP_HOURLYGRAPH || true; // &hourly-graph-checkbox=true
+const WS4KP_TRAVEL = process.env.WS4KP_TRAVEL || false; // &travel-checkbox=false
+const WS4KP_REGIONAL = process.env.WS4KP_REGIONAL || true; // &regional-forecast-checkbox=true
+const WS4KP_LOCAL = process.env.WS4KP_LOCAL || true; // &local-forecast-checkbox=true
+const WS4KP_EXTENDED = process.env.WS4KP_EXTENDED || true; // &extended-forecast-checkbox=true
+const WS4KP_ALMANAC = process.env.WS4KP_ALMANAC || true; // &almanac-checkbox=true
+const WS4KP_SPC = process.env.WS4KP_SPC || true; // &spc-outlook-checkbox=true
+const WS4KP_RADAR = process.env.WS4KP_RADAR || true; // &radar-checkbox=true
+const WS4KP_WIDE = process.env.WS4KP_WIDE || false; // &settings-wide-checkbox=false
+const WS4KP_KIOSK = process.env.WS4KP_KIOSK || false; // &settings-kiosk-checkbox=false
+const WS4KP_STICKYHKIOSK = process.env.WS4KP_STICKYHKIOSK || false; // settings-stickyKiosk-checkbox=false
+const WS4KP_CUSTOMFEEDEN = process.env.WS4KP_CUSTOMFEEDEN || false; // &settings-customFeedEnable-checkbox=false
+const WS4KP_SPEED = process.env.WS4KP_SPEED || "1.0"; /// &settings-speed-select=1.00
+const WS4KP_SCANLINEMODE = process.env.WS4KP_SCANLINEMODE || "auto"; // &settings-scanLineMode-select=auto
+const WS4KP_UNITS = process.env.WS4KP_UNITS || "auto"; // &settings-units-select=us
+const WS4KP_TXTLOC = process.env.WS4KP_TXTLOC || "Detroit%2C+MI%2C+USA"; // &txtLocation=Detroit%2C+MI%2C+USA
+const WS4KP_CUSTOMFEEDSTR = process.env.WS4KP_CUSTOMFEEDSTR || ""; // &settings-customFeed-string=
+const WS4KP_SHARELINK = process.env.WS4KP_SHARELINK || ""; // &share-link-url=
+const WS4KP_SCANLINEEN = process.env.WS4KP_SCANLINEEN || false; // &settings-scanLines-checkbox=false
+const WS4KP_MEDIAVOLUME = process.env.WS4KP_MEDIAVOLUME || "0.75"; // &settings-mediaVolume-select=0.75
+const WS4KP_LOCQUERY = process.env.WS4KP_LOCQUERY || "Detroit%2C+MI%2C+USA" // &latLonQuery=Detroit%2C+MI%2C+USADetroit%2C+MI%2C+USA
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
 const STREAM_PORT = process.env.STREAM_PORT || '9798';
-const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
+const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}/?hazards-checkbox=${WS4KP_HAZARDS}&latest-observations-checkbox=${WS4KP_LATEST}&hourly-checkbox=${WS4KP_HOURLY}&hourly-graph-checkbox=${WS4KP_HOURLYGRAPH}&travel-checkbox=${WS4KP_TRAVEL}&regional-forecast-checkbox=${WS4KP_REGIONAL}&local-forecast-checkbox=${WS4KP_LOCAL}&extended-forecast-checkbox=${WS4KP_EXTENDED}&almanac-checkbox=${WS4KP_ALMANAC}&spc-outlook-checkbox=${WS4KP_SPC}&radar-checkbox=${WS4KP_RADAR}&settings-wide-checkbox=${WS4KP_WIDE}&settings-kiosk-checkbox=${WS4KP_KIOSK}settings-stickyKiosk-checkbox=${WS4KP_STICKYHKIOSK}&settings-customFeedEnable-checkbox=${WS4KP_CUSTOMFEEDEN}&settings-speed-select=${WS4KP_SPEED}&settings-scanLineMode-select=${WS4KP_SCANLINEMODE}&settings-units-select=${WS4KP_UNITS}&txtLocation=${WS4KP_TXTLOC}&settings-customFeed-string=${WS4KP_CUSTOMFEEDSTR}&share-link-url=${WS4KP_SHARELINK}&settings-scanLines-checkbox=${WS4KP_SCANLINEEN}&settings-mediaVolume-select=${WS4KP_MEDIAVOLUME}&latLonQuery=${WS4KP_LOCQUERY}`;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
 const chnlNum = process.env.CHANNEL_NUMBER || '275';
@@ -142,19 +166,19 @@ async function startBrowser() {
   page = await browser.newPage();
   await page.goto(WS4KP_URL, { waitUntil: 'networkidle2', timeout: 30000 });
 
-  try {
-    const zipInput = await page.waitForSelector('input[placeholder="Zip or City, State"], input', { timeout: 5000 });
-    if (zipInput) {
-      await zipInput.type(ZIP_CODE, { delay: 100 });
-      await waitFor(1000);
-      await page.keyboard.press('ArrowDown');
-      await waitFor(500);
-      const goButton = await page.$('button[type="submit"]');
-      if (goButton) await goButton.click();
-      else await zipInput.press('Enter');
-      await page.waitForSelector('div.weather-display, #weather-content', { timeout: 30000 });
-    }
-  } catch {}
+  // try {
+  //   const zipInput = await page.waitForSelector('input[placeholder="Zip or City, State"], input', { timeout: 5000 });
+  //   if (zipInput) {
+  //     await zipInput.type(ZIP_CODE, { delay: 100 });
+  //     await waitFor(1000);
+  //     await page.keyboard.press('ArrowDown');
+  //     await waitFor(500);
+  //     const goButton = await page.$('button[type="submit"]');
+  //     if (goButton) await goButton.click();
+  //     else await zipInput.press('Enter');
+  //     await page.waitForSelector('div.weather-display, #weather-content', { timeout: 30000 });
+  //   }
+  // } catch {}
 
   await page.setViewport({ width: 1280, height: 720 });
 }

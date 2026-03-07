@@ -92,6 +92,31 @@ Environment Variables
 	•  FRAME_RATE: Stream frame rate (default: 10)
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
+
+	* WS4KP_HAZARDS true; // ?hazards-checkbox=true
+    * WS4KP_LATEST true; // &latest-observations-checkbox=true
+    * WS4KP_HOURLY false; // &hourly-checkbox=false
+    * WS4KP_HOURLYGRAPH true; // &hourly-graph-checkbox=true
+    * WS4KP_TRAVEL false; // &travel-checkbox=false
+    * WS4KP_REGIONAL true; // &regional-forecast-checkbox=true
+    * WS4KP_LOCAL true; // &local-forecast-checkbox=true
+    * WS4KP_EXTENDED true; // &extended-forecast-checkbox=true
+    * WS4KP_ALMANAC true; // &almanac-checkbox=true
+    * WS4KP_SPC true; // &spc-outlook-checkbox=true
+    * WS4KP_RADAR true; // &radar-checkbox=true
+    * WS4KP_WIDE false; // &settings-wide-checkbox=false
+    * WS4KP_KIOSK false; // &settings-kiosk-checkbox=false
+    * WS4KP_STICKYHKIOSK false; // settings-stickyKiosk-checkbox=false
+    * WS4KP_CUSTOMFEEDEN false; // &settings-customFeedEnable-checkbox=false
+    * WS4KP_SPEED "1.0"; /// &settings-speed-select=1.00
+    * WS4KP_SCANLINEMODE "auto"; // &settings-scanLineMode-select=auto
+    * WS4KP_UNITS "auto"; // &settings-units-select=us
+    * WS4KP_TXTLOC "Detroit%2C+MI%2C+USA"; // &txtLocation=Detroit%2C+MI%2C+USA
+    * WS4KP_CUSTOMFEEDSTR ""; // &settings-customFeed-string=
+    * WS4KP_SHARELINK ""; // &share-link-url=
+    * WS4KP_SCANLINEEN false; // &settings-scanLines-checkbox=false
+    * WS4KP_MEDIAVOLUME "0.75"; // &settings-mediaVolume-select=0.75
+    * WS4KP_LOCQUERY "Detroit%2C+MI%2C+USA" // &latLonQuery=Detroit%2C+MI%2C+USADetroit%2C+MI%2C+USA
  
 
 ##  Hardware Acceleration Support
