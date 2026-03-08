@@ -1,21 +1,19 @@
 # Latest Update
 
-Fixed some users reporting MaxListenersExceeded warning. 
+03/07/2026
+Attempt to default the output to widescreen, randomize music, and expand guide data compatiability for other programs like xTeVe, Telly, Threadfin, Plex, Jellyfin ect.
 
-If you are using the recent versions 6.0+ of ws4kp use the "latest" tag.  This version adjusts the crop to fix white lines on the top and right. If you are using older ws4kp use the SHA listed below. 
+***Please update you WS4KP container to use the following variable:***
 
-Merged pull request from @jacroe to try to solve some users having issues with white bars. I never experienced these white bars on the sides. Use the "latest" tag to try this version out and please let me know if you have issues. Hopefully his changes correct it for users with the issue.  I have not tested this version as of yet. 
+WSQS_settings_wide_checkbox=true
 
-Reverted back to original amd64 only image due to bugs from merged jasongdove. Use image below instead of Latest tag. 
+***Please not that this variable goes in the WS4KP container not this ws4channels container.****
 
-Merged pull request from @jasongdove to attempt hardware acceleration.  His instructions are as follows: 
+Use the :latest tag for these changes.
 
-To test with NVIDIA, I included --gpus all on my run command, as well as the env var -e "VIDEO_OPTIONS=-c:v h264_nvenc -pix_fmt yuv420p -b:v 2000k".
-I personally have not had time to test this.  See issue #11 for context.  
 
 # Known Bugs
 
-Some users report white lines on top and right side of the video after a buggy merge.  The latest tag will to fix this. 
 
 # ws4channels
 
@@ -93,61 +91,10 @@ Environment Variables
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
 
-	* WS4KP_HAZARDS true; // ?hazards-checkbox=true
-    * WS4KP_LATEST true; // &latest-observations-checkbox=true
-    * WS4KP_HOURLY false; // &hourly-checkbox=false
-    * WS4KP_HOURLYGRAPH true; // &hourly-graph-checkbox=true
-    * WS4KP_TRAVEL false; // &travel-checkbox=false
-    * WS4KP_REGIONAL true; // &regional-forecast-checkbox=true
-    * WS4KP_LOCAL true; // &local-forecast-checkbox=true
-    * WS4KP_EXTENDED true; // &extended-forecast-checkbox=true
-    * WS4KP_ALMANAC true; // &almanac-checkbox=true
-    * WS4KP_SPC true; // &spc-outlook-checkbox=true
-    * WS4KP_RADAR true; // &radar-checkbox=true
-    * WS4KP_WIDE false; // &settings-wide-checkbox=false
-    * WS4KP_KIOSK false; // &settings-kiosk-checkbox=false
-    * WS4KP_STICKYHKIOSK false; // settings-stickyKiosk-checkbox=false
-    * WS4KP_CUSTOMFEEDEN false; // &settings-customFeedEnable-checkbox=false
-    * WS4KP_SPEED "1.0"; /// &settings-speed-select=1.00
-    * WS4KP_SCANLINEMODE "auto"; // &settings-scanLineMode-select=auto
-    * WS4KP_UNITS "auto"; // &settings-units-select=us
-    * WS4KP_TXTLOC "Detroit%2C+MI%2C+USA"; // &txtLocation=Detroit%2C+MI%2C+USA
-    * WS4KP_CUSTOMFEEDSTR ""; // &settings-customFeed-string=
-    * WS4KP_SHARELINK ""; // &share-link-url=
-    * WS4KP_SCANLINEEN false; // &settings-scanLines-checkbox=false
-    * WS4KP_MEDIAVOLUME "0.75"; // &settings-mediaVolume-select=0.75
-    * WS4KP_LOCQUERY "Detroit%2C+MI%2C+USA" // &latLonQuery=Detroit%2C+MI%2C+USADetroit%2C+MI%2C+USA
- 
 
 ##  Hardware Acceleration Support
 
-Update!! Currently hardware encoding and Multi Arch are not supported. I'm leaving these instructions up in case I can get them working or if those images from the past are still working for others. 
-
-This project supports hardware-accelerated video encoding using `ffmpeg`. To enable it, override the `VIDEO_OPTIONS` environment variable when running the container.
-
-### Intel Quick Sync (QSV)
-```bash
-
---device=/dev/dri \
--e VIDEO_OPTIONS="-c:v h264_qsv -b:v 1000k"
-```
-### Nvidia NVENC
-```bash
-
---gpus all \
--e VIDEO_OPTIONS="-c:v h264_nvenc -b:v 1000k"
-```
-
-### AMD VAAPI
-
-```bash
-
---device=/dev/dri \
--e VIDEO_OPTIONS="-vaapi_device /dev/dri/renderD128 -c:v h264_vaapi -b:v 1000k -vf format=nv12,hwupload"
-
-```
-Docker containers must have access to GPU devices (--gpus all or --device=/dev/dri).
- 
+Update!! Currently hardware encoding and Multi Arch are not supported. 
 
 
 ### Accessing the Stream
@@ -180,6 +127,7 @@ Latest additions
   - 05 Care Free.mp3
   - 06 Weatherscan Track 14.mp3
   - 07 Weatherscan Track 18.mp3
+  
 - To customize, add your own MP3 files to the `music` folder. Only `.mp3` files are included in the stream.
 - If no MP3s are found, the default tracks are used.
 - After adding your mp3 tracks to the music folder restart the container so the app will pick up the new music. 
