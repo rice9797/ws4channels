@@ -1,13 +1,27 @@
 # Latest Update
 
 03/07/2026
-Attempt to default the output to widescreen, randomize music, and expand guide data compatiability for other programs like xTeVe, Telly, Threadfin, Plex, Jellyfin ect.
+Added widescreen as default output, randomized music, and expand guide data compatiability for other programs like xTeVe, Telly, Threadfin, Plex, Jellyfin ect.
 
-***Please update you WS4KP container to use the following variable:***
+***Please update/install your WS4KP container to use the following variable:***
 
 WSQS_settings_wide_checkbox=true
 
-***Please not that this variable goes in the WS4KP container not this ws4channels container.****
+```bash
+docker pull ghcr.io/netbymatt/ws4kp:latest
+'''
+
+```bash
+docker run -d \
+  --name ws4kp \
+  --restart unless-stopped \
+  -p 9090:8080 \
+  -e WSQS_settings_wide_checkbox=true \
+  ghcr.io/netbymatt/ws4kp:latest
+'''
+
+***Please note that this variable goes in the WS4KP container not this ws4channels container.****
+
 
 Use the :latest tag for these changes.
 
@@ -22,26 +36,19 @@ A Dockerized Node.js application to stream WeatherStar 4000 data into Channels D
 ## Prerequisites
 - 850MB availabe RAM
 - Docker installed
-- WS4KP running (default port 8080)
+- WS4KP running and installed with the WSQS_settings_wide_checkbox=true variable.
    https://github.com/netbymatt/ws4kp
+  
 ## Usage
 
 Build and run the container:
 
 Step 1: Pull the Docker Image
 
-If you are using the recent versions 6.0+ of ws4kp use the "latest" tag. This version adjusts the crop to fix white lines on the top and right. If you are using older ws4kp use the SHA listed below.
-```bash
-
-docker pull ghcr.io/rice9797/ws4channels@sha256:8d68bacc7bbe33e2edf9c6bb050fe09a502ea9badb0df0f08b6d0ca28a9842a7
-```
-Or for Latest tag version:
-
 ```bash
 
 docker pull ghcr.io/rice9797/ws4channels:latest
 ```
-If you use the latest tag remember to change the docker run command to use latest tag instead of the sha256 in the example below. 
 
 Step 2: Run the Container
 
@@ -58,7 +65,7 @@ docker run -d \
   -e ZIP_CODE=your_zip_code \
   -e WS4KP_HOST=ws4kp_host \
   -e WS4KP_PORT=ws4kp_port \
-http://ghcr.io/rice9797/ws4channels@sha256:8d68bacc7bbe33e2edf9c6bb050fe09a502ea9badb0df0f08b6d0ca28a9842a7
+http://ghcr.io/rice9797/ws4channels:latest
 ```
 Example:
 
