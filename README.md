@@ -7,18 +7,24 @@ Added widescreen as default output, randomized music, and expand guide data comp
 
 WSQS_settings_wide_checkbox=true
 
-```bash
-docker pull ghcr.io/netbymatt/ws4kp:latest
-'''
+Pull ws4kp container.
 
 ```bash
+
+docker pull ghcr.io/netbymatt/ws4kp:latest
+```
+
+Run ws4kp container.
+
+```bash
+
 docker run -d \
   --name ws4kp \
   --restart unless-stopped \
   -p 9090:8080 \
   -e WSQS_settings_wide_checkbox=true \
   ghcr.io/netbymatt/ws4kp:latest
-'''
+```
 
 ***Please note that this variable goes in the WS4KP container not this ws4channels container.****
 
