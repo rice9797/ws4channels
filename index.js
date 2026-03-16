@@ -36,6 +36,16 @@ let isStreamReady = false;
 
 const waitFor = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper: Fisher–Yates shuffle
+function shuffleArray(array) {
+  const arr = array.slice();
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function getContainerLimits() {
   let cpuQuotaPath = '/sys/fs/cgroup/cpu.max';
   let memLimitPath = '/sys/fs/cgroup/memory.max';
@@ -51,12 +61,34 @@ function createAudioInputFile() {
     '01 Weatherscan Track 26.mp3','02 Weatherscan Track 3.mp3','03 Tropical Breeze.mp3',
     '04 Late Nite Cafe.mp3','05 Care Free.mp3','06 Weatherscan Track 14.mp3','07 Weatherscan Track 18.mp3'
   ];
-  let files=[];
-  try { files=fs.readdirSync(AUDIO_DIR).filter(f=>f.toLowerCase().endsWith('.mp3')); if(!files.length) throw new Error(); } catch { files=defaultMp3s; }
-  for(let i=files.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [files[i],files[j]]=[files[j],files[i]]; }
-  const audioList = files.map(f=>`file '${path.join(AUDIO_DIR,f)}'`).join('\n');
-  fs.writeFileSync(path.join(__dirname,'audio_list.txt'),audioList);
+
+  let files = [];
+  try {
+    // Read only MP3 files from AUDIO_DIR
+    files = fs.readdirSync(AUDIO_DIR).filter(file => file.toLowerCase().endsWith('.mp3'));
+    if (files.length === 0) {
+      console.warn('No MP3 files found in music directory; using default music list');
+      files = defaultMp3s;
+    }
+  } catch (err) {
+    console.error(`Failed to read music directory: ${err.message}`);
+    console.warn('Using default music list due to error');
+    files = defaultMp3s;
+  }
+  
+  // Shuffle if requested
+  if (process.env.SHUFFLE_MUSIC?.toLowerCase() === 'true') {
+    files = shuffleArray(files);
+    console.log('Shuffled music list based on SHUFFLE_MUSIC=true');
+  }
+
   console.log(`Loaded ${files.length} music files`);
+  const audioList = files.map(file => `file '${path.join(AUDIO_DIR, file)}'`).join('\n');
+  fs.writeFileSync(path.join(__dirname, 'audio_list.txt'), audioList);
+
+
+  // Note: Update README to inform users they can add MP3 files to the 'music' folder
+  // and that the default files (listed above) are used if no MP3s are found.
 }
 
 function generateXMLTV(host) {
