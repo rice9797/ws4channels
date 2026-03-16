@@ -1,21 +1,39 @@
 # Latest Update
 
-Fixed some users reporting MaxListenersExceeded warning. 
+03/07/2026
+Added widescreen as default output, randomized music, and expand guide data compatiability for other programs like xTeVe, Telly, Threadfin, Plex, Jellyfin ect.
 
-If you are using the recent versions 6.0+ of ws4kp use the "latest" tag.  This version adjusts the crop to fix white lines on the top and right. If you are using older ws4kp use the SHA listed below. 
+***Please update/install your WS4KP container to use the following variable:***
 
-Merged pull request from @jacroe to try to solve some users having issues with white bars. I never experienced these white bars on the sides. Use the "latest" tag to try this version out and please let me know if you have issues. Hopefully his changes correct it for users with the issue.  I have not tested this version as of yet.
+WSQS_settings_wide_checkbox=true
 
-Reverted back to original amd64 only image due to bugs from merged jasongdove. Use image below instead of Latest tag.
+Pull ws4kp container.
 
-Merged pull request from @jasongdove to attempt hardware acceleration.  His instructions are as follows:
+```bash
 
-To test with NVIDIA, I included --gpus all on my run command, as well as the env var -e "VIDEO_OPTIONS=-c:v h264_nvenc -pix_fmt yuv420p -b:v 2000k".
-I personally have not had time to test this.  See issue #11 for context.  
+docker pull ghcr.io/netbymatt/ws4kp:latest
+```
+
+Run ws4kp container.
+
+```bash
+
+docker run -d \
+  --name ws4kp \
+  --restart unless-stopped \
+  -p 9090:8080 \
+  -e WSQS_settings_wide_checkbox=true \
+  ghcr.io/netbymatt/ws4kp:latest
+```
+
+***Please note that this variable goes in the WS4KP container not this ws4channels container.****
+
+
+Use the :latest tag for these changes.
+
 
 # Known Bugs
 
-Some users report white lines on top and right side of the video after a buggy merge.  The latest tag will to fix this. 
 
 # ws4channels
 
@@ -25,29 +43,19 @@ A Dockerized Node.js application to stream WeatherStar 4000 data into Channels D
 
 - 850MB availabe RAM
 - Docker installed
-- WS4KP running (default port 8080)
-   <https://github.com/netbymatt/ws4kp>
-
+- WS4KP running and installed with the WSQS_settings_wide_checkbox=true variable.
+   https://github.com/netbymatt/ws4kp
+  
 ## Usage
 
 Build and run the container:
 
 Step 1: Pull the Docker Image
 
-If you are using the recent versions 6.0+ of ws4kp use the "latest" tag. This version adjusts the crop to fix white lines on the top and right. If you are using older ws4kp use the SHA listed below.
-```bash
-
-docker pull ghcr.io/rice9797/ws4channels@sha256:8d68bacc7bbe33e2edf9c6bb050fe09a502ea9badb0df0f08b6d0ca28a9842a7
-```
-
-Or for Latest tag version:
-
 ```bash
 
 docker pull ghcr.io/rice9797/ws4channels:latest
 ```
-
-If you use the latest tag remember to change the docker run command to use latest tag instead of the sha256 in the example below.
 
 Step 2: Run the Container
 
@@ -64,7 +72,7 @@ docker run -d \
   -e ZIP_CODE=your_zip_code \
   -e WS4KP_HOST=ws4kp_host \
   -e WS4KP_PORT=ws4kp_port \
-http://ghcr.io/rice9797/ws4channels@sha256:8d68bacc7bbe33e2edf9c6bb050fe09a502ea9badb0df0f08b6d0ca28a9842a7
+http://ghcr.io/rice9797/ws4channels:latest
 ```
 
 Example:
@@ -96,9 +104,8 @@ Environment Variables
 	•  FRAME_RATE: Stream frame rate (default: 10)
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
- 
-
- •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
+  
+  •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
 
 ## Hardware Acceleration Support
 
@@ -122,14 +129,10 @@ This project supports hardware-accelerated video encoding using `ffmpeg`. To ena
 -e VIDEO_OPTIONS="-c:v h264_nvenc -b:v 1000k"
 ```
 
-### AMD VAAPI
 
-```bash
+##  Hardware Acceleration Support
 
---device=/dev/dri \
--e VIDEO_OPTIONS="-vaapi_device /dev/dri/renderD128 -c:v h264_vaapi -b:v 1000k -vf format=nv12,hwupload"
-
-```
+Update!! Currently hardware encoding and Multi Arch are not supported. 
 
 Docker containers must have access to GPU devices (--gpus all or --device=/dev/dri).
 
@@ -163,6 +166,7 @@ Latest additions
   - 05 Care Free.mp3
   - 06 Weatherscan Track 14.mp3
   - 07 Weatherscan Track 18.mp3
+  
 - To customize, add your own MP3 files to the `music` folder. Only `.mp3` files are included in the stream.
 - If no MP3s are found, the default tracks are used.
 - After adding your mp3 tracks to the music folder restart the container so the app will pick up the new music.
