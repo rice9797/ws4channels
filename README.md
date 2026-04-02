@@ -72,6 +72,7 @@ docker run -d \
   -e ZIP_CODE=your_zip_code \
   -e WS4KP_HOST=ws4kp_host \
   -e WS4KP_PORT=ws4kp_port \
+  -e PERMALINK_URL=permalink_url\
 http://ghcr.io/rice9797/ws4channels:latest
 ```
 
@@ -104,6 +105,8 @@ Environment Variables
 	•  FRAME_RATE: Stream frame rate (default: 10)
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
+    
+    •  PERMALINK_URL: Retrieve a Permalink URL from ws4kp and add it here to specify ws4kp settings (Optional)
   
   •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
 
