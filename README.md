@@ -112,32 +112,35 @@ Environment Variables
 
 ## Hardware Acceleration Support
 
-Update!! Currently hardware encoding and Multi Arch are not supported. I'm leaving these instructions up in case I can get them working or if those images from the past are still working for others.
+### Intel iGPU (VAAPI)
 
-This project supports hardware-accelerated video encoding using `ffmpeg`. To enable it, override the `VIDEO_OPTIONS` environment variable when running the container.
+Set `ENABLE_iGPU=true` to enable Intel VAAPI hardware encoding via `/dev/dri`. Any other value, or if unset, uses the default software encoder (`libx264`).
 
-### Intel Quick Sync (QSV)
-
-```bash
-
---device=/dev/dri \
--e VIDEO_OPTIONS="-c:v h264_qsv -b:v 1000k"
-```
-
-### Nvidia NVENC
+**Docker run:**
 
 ```bash
-
---gpus all \
--e VIDEO_OPTIONS="-c:v h264_nvenc -b:v 1000k"
+docker run -d \
+  --name ws4channels \
+  --device=/dev/dri:/dev/dri \
+  --group-add render \
+  -e ENABLE_iGPU=true \
+  ...
 ```
 
+**Docker Compose:**
 
-##  Hardware Acceleration Support
+```yaml
+devices:
+  - /dev/dri:/dev/dri
+environment:
+  - ENABLE_iGPU=true
+```
 
-Update!! Currently hardware encoding and Multi Arch are not supported. 
+**Host requirements:**
 
-Docker containers must have access to GPU devices (--gpus all or --device=/dev/dri).
+- Install `intel-media-va-driver` (or `intel-media-va-driver-non-free` for newer Arc/Xe iGPUs)
+- The container user needs access to the `render` group (`--group-add render`)
+- Verify VAAPI support inside the container: `ffmpeg -hwaccels | grep vaapi`
 
 ### Accessing the Stream
 
