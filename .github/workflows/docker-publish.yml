@@ -35,7 +35,7 @@ jobs:
         uses: docker/build-push-action@v6   # v6 supports Node.js 24 runner
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/${{ github.repository_owner }}/ws4channels:latest
           # BuildKit layer cache stored in GitHub Actions cache.
