@@ -156,7 +156,7 @@ async function startTranscoding() {
     ffmpegProc = ffmpeg()
       .input(ffmpegStream)
       .inputFormat('image2pipe')
-      .inputOptions([`-framerate ${FRAME_RATE}`, '-hwaccel vaapi', '-hwaccel_device /dev/dri', '-hwaccel_output_format vaapi'])
+      .inputOptions([`-framerate ${FRAME_RATE}`, '-vaapi_device /dev/dri/renderD128'])
       .input(path.join(__dirname,'audio_list.txt'))
       .inputOptions(['-f concat','-safe 0','-stream_loop -1'])
       .complexFilter([
