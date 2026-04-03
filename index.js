@@ -17,6 +17,7 @@ const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
 const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
+const ENABLE_IGPU = process.env.ENABLE_IGPU?.toLowerCase() === 'true';
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const AUDIO_DIR = path.join(__dirname, 'music');
@@ -151,16 +152,22 @@ async function startTranscoding() {
   await startBrowser();
   createAudioInputFile();
   ffmpegStream = new PassThrough();
+  const scaleFilter = ENABLE_IGPU
+    ? '[0:v]scale=1280:720,format=nv12,hwupload=extra_hw_frames=64[v]'
+    : '[0:v]scale=1280:720[v]';
+  const videoOptions = ENABLE_IGPU
+    ? ['-c:v', 'h264_qsv', '-b:v', '1000k']
+    : ['-c:v', 'libx264', '-preset', 'ultrafast', '-b:v', '1000k'];
   ffmpegProc = ffmpeg()
     .input(ffmpegStream)
     .inputFormat('image2pipe')
     .inputOptions([`-framerate ${FRAME_RATE}`])
     .input(path.join(__dirname,'audio_list.txt'))
     .inputOptions(['-f concat','-safe 0','-stream_loop -1'])
-    .complexFilter(['[0:v]scale=1280:720[v]','[1:a]volume=0.5[a]'])
-    .outputOptions(['-map [v]','-map [a]','-c:v libx264','-c:a aac','-b:a 128k','-preset ultrafast','-b:v 1000k','-f hls','-hls_time 2','-hls_list_size 2','-hls_flags delete_segments'])
+    .complexFilter([scaleFilter,'[1:a]volume=0.5[a]'])
+    .outputOptions(['-map [v]','-map [a]',...videoOptions,'-c:a aac','-b:a 128k','-f hls','-hls_time 2','-hls_list_size 2','-hls_flags delete_segments'])
     .output(HLS_FILE)
-    .on('start',()=>{ console.log(`Started FFmpeg - Version ${VERSION}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
+    .on('start',()=>{ console.log(`Started FFmpeg - Version ${VERSION} | Encoder: ${ENABLE_IGPU ? 'h264_qsv (iGPU)' : 'libx264 (CPU)'}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
     .on('error', async err=>{ console.error('FFmpeg error:',err); await stopTranscoding(); startTranscoding(); })
     .on('end',()=>{ ffmpegProc=null; ffmpegStream=null; isStreamReady=false; });
 
