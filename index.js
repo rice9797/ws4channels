@@ -231,7 +231,6 @@ app.get('/health',(req,res)=>{ res.status(isStreamReady?200:503).json({ready:isS
 
 const { cpus, memoryMB } = getContainerLimits();
 console.log(`Version ${VERSION} | Running with ${cpus} CPU cores, ${memoryMB}MB RAM`);
-console.log(`PERMALINK_URL: ${PERMALINK_URL ?? '(not set)'}`);
 
 app.listen(STREAM_PORT, async ()=>{
   console.log(`Streaming server running on port ${STREAM_PORT}`);
