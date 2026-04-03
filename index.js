@@ -18,6 +18,7 @@ const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
 const ENABLE_iGPU = process.env.ENABLE_iGPU?.toLowerCase() === 'true';
+const VAAPI_DEVICE = process.env.VAAPI_DEVICE || '/dev/dri';
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const AUDIO_DIR = path.join(__dirname, 'music');
@@ -154,9 +155,10 @@ async function startTranscoding() {
   ffmpegStream = new PassThrough();
   if (ENABLE_iGPU) {
     ffmpegProc = ffmpeg()
+      .inputOptions([`-vaapi_device ${VAAPI_DEVICE}`])
       .input(ffmpegStream)
       .inputFormat('image2pipe')
-      .inputOptions([`-framerate ${FRAME_RATE}`, '-vaapi_device /dev/dri/renderD128'])
+      .inputOptions([`-framerate ${FRAME_RATE}`])
       .input(path.join(__dirname,'audio_list.txt'))
       .inputOptions(['-f concat','-safe 0','-stream_loop -1'])
       .complexFilter([
@@ -166,7 +168,7 @@ async function startTranscoding() {
       ])
       .outputOptions(['-map [v]','-map [a]','-c:v h264_vaapi','-c:a aac','-b:a 128k','-b:v 1000k','-f hls','-hls_time 2','-hls_list_size 2','-hls_flags delete_segments'])
       .output(HLS_FILE)
-      .on('start',()=>{ console.log(`[Encoder] Using Intel VAAPI hardware encoding via /dev/dri`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
+      .on('start',()=>{ console.log(`[Encoder] Using Intel VAAPI hardware encoding via ${VAAPI_DEVICE}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
       .on('error', async err=>{ console.error('FFmpeg error:',err); await stopTranscoding(); startTranscoding(); })
       .on('end',()=>{ ffmpegProc=null; ffmpegStream=null; isStreamReady=false; });
   } else {

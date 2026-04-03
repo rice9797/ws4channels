@@ -124,6 +124,7 @@ docker run -d \
   --device=/dev/dri:/dev/dri \
   --group-add render \
   -e ENABLE_iGPU=true \
+  -e VAAPI_DEVICE=/dev/dri \
   ...
 ```
 
@@ -134,6 +135,7 @@ devices:
   - /dev/dri:/dev/dri
 environment:
   - ENABLE_iGPU=true
+  - VAAPI_DEVICE=/dev/dri
 ```
 
 **Host requirements:**
