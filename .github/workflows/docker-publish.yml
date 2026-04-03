@@ -5,6 +5,7 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
 
 # Restrict GITHUB_TOKEN to only what a Docker build+push actually needs.
 # Previously had write access to Issues, Discussions, Pages, PRs, etc.
