@@ -105,9 +105,9 @@ Environment Variables
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
   
-  •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
+    •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
   
-  • PERMALINK_URL: Pass configuration parameters via permalink generated from ws4kp
+    •  PERMALINK_URL: Pass configuration parameters via permalink generated from ws4kp
 
 ## Hardware Acceleration Support
 
