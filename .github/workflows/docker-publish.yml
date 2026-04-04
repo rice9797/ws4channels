@@ -3,15 +3,11 @@ name: Build and Publish Docker Image
 on:
   push:
     branches:
-      - master
-
-permissions:
-  contents: read
-  packages: write
+      - master  # Triggers when you merge into main
 
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout source
@@ -32,6 +28,6 @@ jobs:
         with:
           context: .
           push: true
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/g3rmanaviator/ws4channels:latest
