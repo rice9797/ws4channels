@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:22-noble
 
 # Install FFmpeg and Puppeteer dependencies
 RUN apt-get update && apt-get install -y \
@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
   libxdamage1 \
   libxrandr2 \
   libgbm1 \
-  libasound2 \
+  libasound2t64 \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
