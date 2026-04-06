@@ -216,7 +216,8 @@ async function startTranscoding() {
     })
     .on('error', async err => {
       console.error('FFmpeg error:', err);
-      await restartTranscoding();
+      await stopTranscoding();
+      startTranscoding();
     })
     .on('end', () => {
       ffmpegProc = null;
