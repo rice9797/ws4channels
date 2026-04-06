@@ -16,6 +16,7 @@ const STREAM_PORT = process.env.STREAM_PORT || '9798';
 const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = Number(process.env.FRAME_RATE || 10);
+const WS4KP_INTERNATIONAL = process.env.WS4KP_INTERNATIONAL?.toLowerCase() === 'true';
 const PUPPETEER_EXECUTABLE_PATH =
   process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable';
 
@@ -263,7 +264,7 @@ async function startTranscoding() {
 
       const screenshot = await page.screenshot({
         type: 'jpeg',
-        clip: { x: 4, y: 50, width: 840, height: 470 }
+        clip: { x: WS4KP_INTERNATIONAL ? 8 : 4, y: 50, width: 840, height: 470 }
       });
 
       ffmpegStream.write(screenshot);
