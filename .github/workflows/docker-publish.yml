@@ -3,7 +3,7 @@ name: Build and Publish Docker Image
 on:
   push:
     branches:
-      - ubuntu-24.04
+      - merge
   workflow_dispatch:
 
 jobs:
@@ -31,4 +31,4 @@ jobs:
           push: true
           platforms: linux/amd64
           tags: |
-            ghcr.io/g3rmanaviator/ws4channels:ubuntu-24
+            ghcr.io/g3rmanaviator/ws4channels:merge
