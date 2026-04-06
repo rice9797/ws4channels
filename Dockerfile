@@ -1,42 +1,61 @@
-FROM node:22-noble
+FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LIBVA_DRIVER_NAME=iHD
 ENV PUPPETEER_SKIP_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Install Node.js 18
-RUN apt-get update && apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs
+# Base packages
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    pciutils \
+    usbutils \
+    vainfo \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install FFmpeg, Intel media drivers, and Puppeteer dependencies
+# Node.js 22
+# NodeSource currently documents the Debian/Ubuntu repo flow for Node 22 installs.
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
+      | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" \
+      > /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# FFmpeg + Intel media stack + common runtime libs
 RUN apt-get update && apt-get install -y \
     ffmpeg \
-    chromium-browser \
     intel-media-va-driver-non-free \
-    libva-drm2 \
+    libmfx-gen1 \
+    libvpl2 \
+    libvpl-tools \
     libva2 \
+    libva-drm2 \
+    va-driver-all \
+    libdrm2 \
+    libgbm1 \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
     libcups2 \
-    libdrm2 \
     libxkbcommon0 \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
-    libgbm1 \
     libasound2t64 \
+    libxshmfence1 \
+    libx11-xcb1 \
+    fonts-liberation \
+    xdg-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY package*.json ./
-
 RUN npm install --verbose
 
-# Copy application code, music, and logo files
 COPY . .
 
 RUN mkdir -p /app/music /app/logo
@@ -44,7 +63,6 @@ RUN mkdir -p /app/music /app/logo
 COPY music/*.mp3 /app/music/
 COPY logo/*.png /app/logo/
 
-# Use STREAM_PORT environment variable for dynamic port
-EXPOSE $STREAM_PORT
+EXPOSE 3000
 
 CMD ["node", "index.js"]
