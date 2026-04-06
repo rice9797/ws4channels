@@ -28,12 +28,11 @@ RUN mkdir -p /etc/apt/keyrings && \
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     intel-media-va-driver-non-free \
-    libmfx-gen1 \
     libvpl2 \
-    libvpl-tools \
     libva2 \
     libva-drm2 \
     va-driver-all \
+    vainfo \
     libdrm2 \
     libgbm1 \
     libnss3 \
