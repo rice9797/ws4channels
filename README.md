@@ -1,5 +1,14 @@
 # Latest Update
 
+04/06/2026
+- Upgraded base image to **Ubuntu 24.04**
+- Upgraded to **Node.js 22**
+- Updated audio library to `libasound2t64` (Ubuntu 24.04 renamed package)
+- Intel VAAPI driver stack (`intel-media-va-driver-non-free`, `libvpl2`, `libva2`) baked into the image
+- Added **Intel iGPU hardware encoding** support via VAAPI — enable with `ENABLE_IGPU=true` (amd64 only)
+- Added `WS4KP_INTERNATIONAL` variable for international display offset support
+- **Current build is amd64 only.** arm64 support is planned for a future release.
+
 03/07/2026
 Added widescreen as default output, randomized music, and expand guide data compatiability for other programs like xTeVe, Telly, Threadfin, Plex, Jellyfin ect.
 
@@ -105,36 +114,38 @@ Environment Variables
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
   
-  •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
+    •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
+  
+    •  PERMALINK_URL: Pass configuration parameters via permalink generated from ws4kp/ws4kp-international
+
+	•  WS4KP_INTERNATIONAL: Adjust crop offset when using ws4kp-international (default: false)
+
+	•  ENABLE_IGPU: Enable Intel iGPU hardware encoding via VAAPI (default: false, amd64 only)
 
 ## Hardware Acceleration Support
 
-Update!! Currently hardware encoding and Multi Arch are not supported. I'm leaving these instructions up in case I can get them working or if those images from the past are still working for others.
+Intel iGPU hardware encoding is supported on **amd64** hosts via VAAPI (`h264_vaapi`). This requires passing the `/dev/dri` device to the container and setting `ENABLE_IGPU=true`.
 
-This project supports hardware-accelerated video encoding using `ffmpeg`. To enable it, override the `VIDEO_OPTIONS` environment variable when running the container.
+If `ENABLE_IGPU=true` but `/dev/dri/renderD128` is not found, the container automatically falls back to CPU encoding (`libx264`) and logs a warning.
 
-### Intel Quick Sync (QSV)
+**arm64 and NVIDIA are not currently supported for hardware encoding.**
 
-```bash
-
---device=/dev/dri \
--e VIDEO_OPTIONS="-c:v h264_qsv -b:v 1000k"
-```
-
-### Nvidia NVENC
+### Intel iGPU (VAAPI) — amd64 only
 
 ```bash
-
---gpus all \
--e VIDEO_OPTIONS="-c:v h264_nvenc -b:v 1000k"
+docker run -d \
+  --name ws4channels \
+  --restart unless-stopped \
+  --memory="1096m" \
+  --cpus="1.0" \
+  --device=/dev/dri \
+  -p 9798:9798 \
+  -e ZIP_CODE=your_zip_code \
+  -e WS4KP_HOST=ws4kp_host \
+  -e WS4KP_PORT=ws4kp_port \
+  -e ENABLE_IGPU=true \
+  ghcr.io/rice9797/ws4channels:latest
 ```
-
-
-##  Hardware Acceleration Support
-
-Update!! Currently hardware encoding and Multi Arch are not supported. 
-
-Docker containers must have access to GPU devices (--gpus all or --device=/dev/dri).
 
 ### Accessing the Stream
 
