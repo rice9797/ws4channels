@@ -18,6 +18,7 @@ const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = Number(process.env.FRAME_RATE || 10);
 const WS4KP_INTERNATIONAL = process.env.WS4KP_INTERNATIONAL?.toLowerCase() === 'true';
+const ENABLE_IGPU = process.env.ENABLE_IGPU?.toLowerCase() === 'true';
 const PUPPETEER_EXECUTABLE_PATH =
   process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/google-chrome-stable';
 
@@ -72,6 +73,10 @@ function getContainerLimits() {
   } catch {}
 
   return { cpus, memoryMB: Math.round(memory / (1024 * 1024)) };
+}
+
+function isVaapiAvailable() {
+  return fs.existsSync('/dev/dri/renderD128');
 }
 
 function createAudioInputFile() {
@@ -187,20 +192,31 @@ async function startTranscoding() {
 
   ffmpegStream = new PassThrough();
 
+  const useVaapi = ENABLE_IGPU && isVaapiAvailable();
+  if (ENABLE_IGPU && !useVaapi) console.warn('ENABLE_IGPU set but /dev/dri/renderD128 not found — falling back to libx264');
+  console.log(`Transcoding mode: ${useVaapi ? 'iGPU (h264_vaapi)' : 'CPU (libx264)'}`);
+
+  const vaapiInputOptions = useVaapi ? ['-vaapi_device /dev/dri/renderD128'] : [];
+  const videoComplexFilter = useVaapi
+    ? '[0:v]scale=1280:720,format=nv12,hwupload[v]'
+    : '[0:v]scale=1280:720[v]';
+  const videoCodecOptions = useVaapi
+    ? ['-c:v h264_vaapi']
+    : ['-c:v libx264', '-preset ultrafast'];
+
   ffmpegProc = ffmpeg()
     .input(ffmpegStream)
     .inputFormat('image2pipe')
-    .inputOptions([`-framerate ${FRAME_RATE}`])
+    .inputOptions([`-framerate ${FRAME_RATE}`, ...vaapiInputOptions])
     .input(path.join(__dirname, 'audio_list.txt'))
     .inputOptions(['-f concat', '-safe 0', '-stream_loop -1'])
-    .complexFilter(['[0:v]scale=1280:720[v]', '[1:a]volume=0.5[a]'])
+    .complexFilter([videoComplexFilter, '[1:a]volume=0.5[a]'])
     .outputOptions([
       '-map [v]',
       '-map [a]',
-      '-c:v libx264',
+      ...videoCodecOptions,
       '-c:a aac',
       '-b:a 128k',
-      '-preset ultrafast',
       '-b:v 1000k',
       '-f hls',
       '-hls_time 2',
