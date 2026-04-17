@@ -16,11 +16,15 @@ const STREAM_PORT = process.env.STREAM_PORT || '9798';
 const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
+const VIDEO_FREQUENCY = process.env.VIDEO_FREQUENCY || 120; 
+const VIDEO_LENGTH = process.env.VIDEO_LENGTH || null;
+const SHUFFLE_MUSIC = process.env.SHUFFLE_MUSIC || false;
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const AUDIO_DIR = path.join(__dirname, 'music');
 const LOGO_DIR = path.join(__dirname, 'logo');
 const HLS_FILE = path.join(OUTPUT_DIR, 'stream.m3u8');
+const VIDEO_FILE = path.join(OUTPUT_DIR, 'weather.mp4');
 
 [OUTPUT_DIR, AUDIO_DIR, LOGO_DIR].forEach(dir => { if (!fs.existsSync(dir)) fs.mkdirSync(dir); });
 
@@ -37,7 +41,7 @@ let isStreamReady = false;
 const waitFor = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper: Fisher–Yates shuffle
-function shuffleArray(array) {
+const shuffleArray= (array) => {
   const arr = array.slice();
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -46,7 +50,7 @@ function shuffleArray(array) {
   return arr;
 }
 
-function getContainerLimits() {
+const getContainerLimits = () => {
   let cpuQuotaPath = '/sys/fs/cgroup/cpu.max';
   let memLimitPath = '/sys/fs/cgroup/memory.max';
   let cpus = os.cpus().length;
@@ -56,7 +60,7 @@ function getContainerLimits() {
   return { cpus, memoryMB: Math.round(memory/(1024*1024)) };
 }
 
-function createAudioInputFile() {
+const createAudioInputFile = () =>  {
   const defaultMp3s = [
     '01 Weatherscan Track 26.mp3','02 Weatherscan Track 3.mp3','03 Tropical Breeze.mp3',
     '04 Late Nite Cafe.mp3','05 Care Free.mp3','06 Weatherscan Track 14.mp3','07 Weatherscan Track 18.mp3'
@@ -77,7 +81,7 @@ function createAudioInputFile() {
   }
   
   // Shuffle if requested
-  if (process.env.SHUFFLE_MUSIC?.toLowerCase() === 'true') {
+  if (SHUFFLE_MUSIC?.toLowerCase() === 'true') {
     files = shuffleArray(files);
     console.log('Shuffled music list based on SHUFFLE_MUSIC=true');
   }
@@ -91,7 +95,7 @@ function createAudioInputFile() {
   // and that the default files (listed above) are used if no MP3s are found.
 }
 
-function generateXMLTV(host) {
+const generateXMLTV = (host) => {
   const now = new Date();
   const baseUrl = `http://${host}`;
   let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -117,7 +121,7 @@ function generateXMLTV(host) {
   return xml;
 }
 
-async function startBrowser() {
+const startBrowser = async () => {
   if(browser) await browser.close().catch(()=>{});
   browser = await puppeteer.launch({
     headless: true,
@@ -141,7 +145,7 @@ async function startBrowser() {
   await page.setViewport({ width:1280, height:720 });
 }
 
-async function startTranscoding() {
+const startTranscoding = async () => {
   await startBrowser();
   createAudioInputFile();
   ffmpegStream = new PassThrough();
@@ -177,37 +181,86 @@ async function startTranscoding() {
   ffmpegProc.run();
 }
 
-async function stopTranscoding(){
+const createVideo = async () => {
+  await startBrowser();
+  createAudioInputFile();
+  ffmpegStream = new PassThrough();
+  ffmpegProc = ffmpeg()
+    .input(ffmpegStream)
+    .inputFormat('image2pipe')
+    .inputOptions([`-framerate ${FRAME_RATE}`])
+    .input(path.join(__dirname,'audio_list.txt'))
+    .inputOptions(['-f concat','-safe 0','-stream_loop -1'])
+    .complexFilter(['[0:v]scale=1280:720[v]','[1:a]volume=0.5[a]'])
+    .outputOptions(['-map [v]','-map [a]','-c:v libx264','-c:a aac','-b:a 128k','-preset ultrafast', '-y'])
+    .output(VIDEO_FILE)
+    .duration(VIDEO_LENGTH)
+    .on('start',()=>{ console.log(`Started FFmpeg - Version ${VERSION}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
+    .on('error', async err=>{ console.error('FFmpeg error:',err); await stopTranscoding(); createVideo; })
+    .on('end', stopTranscoding);
+
+
+  captureInterval = setInterval(async ()=>{
+    if(!ffmpegProc || !ffmpegStream || !page) return;
+    try{
+      if(page.isClosed()){ await startBrowser(); return; }
+      // Updated 16:9 capture for version 1.6
+      const screenshot = await page.screenshot({
+        type:'jpeg',
+        clip:{ x:4, y:50, width:840, height:470 } // crop top, right, and bottom based on your measurements
+      });
+      ffmpegStream.write(screenshot);
+    } catch(err){
+      console.warn('Capture error, retrying...', err.message);
+      await startBrowser();
+    }
+  },1000/FRAME_RATE);
+
+  ffmpegProc.run();
+}
+
+const stopTranscoding = async () =>{
   if(captureInterval) clearInterval(captureInterval);
   captureInterval=null; isStreamReady=false;
   if(ffmpegProc) ffmpegProc.kill('SIGINT'); ffmpegProc=null;
   if(browser) await browser.close().catch(()=>{}); browser=null;
 }
 
-app.get('/playlist.m3u',(req,res)=>{
-  const host = req.headers.host || `localhost:${STREAM_PORT}`;
-  const baseUrl = `http://${host}`;
-  const m3uContent = `#EXTM3U
+
+if (VIDEO_LENGTH != null) {
+  // Create video file if a desired length is listed
+    createVideo();
+  // set an interval to reoccur
+  captureInterval = setInterval(async ()=>{
+    createVideo();
+  }, VIDEO_FREQUENCY * 60000);
+  
+} else {
+  // streaming as default behaviour
+app.get('/playlist.m3u', (req, res) => {
+    const host = req.headers.host || `localhost:${STREAM_PORT}`;
+    const baseUrl = `http://${host}`;
+    const m3uContent = `#EXTM3U
 #EXTINF:-1 channel-id="weatherStar4000" tvg-id="weatherStar4000" tvg-channel-no="275" tvc-guide-placeholders="3600" tvc-guide-title="Local Weather" tvc-guide-description="Enjoy your local weather with a touch of nostalgia." tvc-guide-art="${baseUrl}/logo/ws4000.png" tvg-logo="${baseUrl}/logo/ws4000.png",WeatherStar 4000
 ${baseUrl}/stream/stream.m3u8
 `;
-  res.set('Content-Type','application/x-mpegURL'); res.send(m3uContent);
-});
+    res.set('Content-Type', 'application/x-mpegURL'); res.send(m3uContent);
+  });
 
-app.get('/guide.xml',(req,res)=>{
-  const host = req.headers.host || `localhost:${STREAM_PORT}`;
-  res.set('Content-Type','application/xml'); res.send(generateXMLTV(host));
-});
+  app.get('/guide.xml', (req, res) => {
+    const host = req.headers.host || `localhost:${STREAM_PORT}`;
+    res.set('Content-Type', 'application/xml'); res.send(generateXMLTV(host));
+  });
+  app.get('/health', (req, res) => { res.status(isStreamReady ? 200 : 503).json({ ready: isStreamReady }); });
 
-app.get('/health',(req,res)=>{ res.status(isStreamReady?200:503).json({ready:isStreamReady}); });
+  const { cpus, memoryMB } = getContainerLimits();
+  console.log(`Version ${VERSION} | Running with ${cpus} CPU cores, ${memoryMB}MB RAM`);
 
-const { cpus, memoryMB } = getContainerLimits();
-console.log(`Version ${VERSION} | Running with ${cpus} CPU cores, ${memoryMB}MB RAM`);
+  app.listen(STREAM_PORT, async () => {
+    console.log(`Streaming server running on port ${STREAM_PORT}`);
+    await startTranscoding();
+  });
+  process.on('SIGINT', async () => { console.log('SIGINT received'); await stopTranscoding(); process.exit(); });
+  process.on('SIGTERM', async () => { console.log('SIGTERM received'); await stopTranscoding(); process.exit(); });
+}
 
-app.listen(STREAM_PORT, async ()=>{
-  console.log(`Streaming server running on port ${STREAM_PORT}`);
-  await startTranscoding();
-});
-
-process.on('SIGINT', async ()=>{ console.log('SIGINT received'); await stopTranscoding(); process.exit(); });
-process.on('SIGTERM', async ()=>{ console.log('SIGTERM received'); await stopTranscoding(); process.exit(); });
