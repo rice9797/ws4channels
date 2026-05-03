@@ -1,7 +1,7 @@
 # Latest Update
 
-03/07/2026
-Added widescreen as default output, randomized music, and expand guide data compatibility for other programs like xTeVe, Telly, Threadfin, Plex, Jellyfin ect.
+05/03/2026
+Added PR from ws4kp's netbymatt in anticipation of ws4kp versions 7.X and addition of PERMALINK_URL: Pass configuration parameters via permalink generated from ws4kp.  As usual I did not have time to test the update so please report any issues.
 
 Pull ws4kp container.
 
@@ -106,34 +106,10 @@ Environment Variables
 	
 	•  VIEW_MODE: One of: `standard`, `wide` (default), `wide-enhanced` or `portrait-enhanced`. These values correspond to the modes available in ws4kp, with the last two only available in ws4kp v7.0+. Video sizes are 640x480, 1280x720 or 720x1280 to match.
 
-## Hardware Acceleration Support
+## Hardware Acceleration, ARM Multi Arch Support
 
-Update!! Currently hardware encoding and Multi Arch are not supported. I'm leaving these instructions up in case I can get them working or if those images from the past are still working for others.
+Currently hardware encoding and Multi Arch are not supported. 
 
-This project supports hardware-accelerated video encoding using `ffmpeg`. To enable it, override the `VIDEO_OPTIONS` environment variable when running the container.
-
-### Intel Quick Sync (QSV)
-
-```bash
-
---device=/dev/dri \
--e VIDEO_OPTIONS="-c:v h264_qsv -b:v 1000k"
-```
-
-### Nvidia NVENC
-
-```bash
-
---gpus all \
--e VIDEO_OPTIONS="-c:v h264_nvenc -b:v 1000k"
-```
-
-
-##  Hardware Acceleration Support
-
-Update!! Currently hardware encoding and Multi Arch are not supported. 
-
-Docker containers must have access to GPU devices (--gpus all or --device=/dev/dri).
 
 ### Accessing the Stream
 
@@ -158,13 +134,13 @@ Latest additions
 
 - The application plays MP3 files from the `music` folder in the project root.
 - Default tracks included:
-  - 01 Weatherscan Track 26.mp3
-  - 02 Weatherscan Track 3.mp3
-  - 03 Tropical Breeze.mp3
-  - 04 Late Nite Cafe.mp3
-  - 05 Care Free.mp3
-  - 06 Weatherscan Track 14.mp3
-  - 07 Weatherscan Track 18.mp3
+  - 01 WST26.mp3
+  - 02 WST3.mp3
+  - 03 TB.mp3
+  - 04 LNC.mp3
+  - 05 CF.mp3
+  - 06 WST14.mp3
+  - 07 WST18.mp3
   
 - To customize, add your own MP3 files to the `music` folder. Only `.mp3` files are included in the stream.
 - If no MP3s are found, the default tracks are used.
