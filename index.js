@@ -22,6 +22,37 @@ const AUDIO_DIR = path.join(__dirname, 'music');
 const LOGO_DIR = path.join(__dirname, 'logo');
 const HLS_FILE = path.join(OUTPUT_DIR, 'stream.m3u8');
 
+// ws4kp 7.x supports 4 view modes: standard, wide, wide-enhanced, portrait-enhanced
+// sort out the user's preferences and set up appropriate constants
+const validViewModes = ['standard', 'wide', 'wide-enhanced', 'portrait-enhanced'];
+// get the view mode (or default) and make it lower case
+const desiredViewMode = (process.env.VIEW_MODE || 'wide').toLowerCase();
+// test against the valid modes and set up the constant
+const VIEW_MODE = validViewModes.includes(desiredViewMode) ? desiredViewMode : 'wide';
+
+// set up the width and height constants via immediately invoked function
+const VIEW_DIMENSIONS = (()=>{
+	switch(VIEW_MODE) {
+		case 'standard':
+			return {
+				width: 640,
+				height: 480,
+			}
+		case 'portrait-enhanced':
+			return {
+				width: 720,
+				height: 1280,
+			}
+		case 'wide':
+		case 'wide-enhanced':
+		default:
+			return {
+				width: 1280,
+				height: 720,
+			}
+	}
+})();
+
 [OUTPUT_DIR, AUDIO_DIR, LOGO_DIR].forEach(dir => { if (!fs.existsSync(dir)) fs.mkdirSync(dir); });
 
 app.use('/stream', express.static(OUTPUT_DIR));
@@ -125,20 +156,73 @@ async function startBrowser() {
     defaultViewport: null
   });
   page = await browser.newPage();
-  await page.goto(WS4KP_URL,{ waitUntil:'networkidle2', timeout:30000 });
-  try {
-    const zipInput = await page.waitForSelector('input[placeholder="Zip or City, State"], input',{ timeout:5000 });
-    if(zipInput){
-      await zipInput.type(ZIP_CODE,{ delay:100 });
-      await waitFor(1000);
-      await page.keyboard.press('ArrowDown');
-      await waitFor(500);
-      const goButton = await page.$('button[type="submit"]');
-      if(goButton) await goButton.click(); else await zipInput.press('Enter');
-      await page.waitForSelector('div.weather-display, #weather-content',{ timeout:30000 });
-    }
-  } catch {}
-  await page.setViewport({ width:1280, height:720 });
+  if (PERMALINK_URL) {
+    console.log(`Using custom permalink URL: ${PERMALINK_URL}`);
+    await page.goto(PERMALINK_URL, { waitUntil: 'networkidle2', timeout: 30000 });
+  } else {
+    await page.goto(WS4KP_URL, { waitUntil: 'networkidle2', timeout: 30000 });
+    try {
+      const zipInput = await page.waitForSelector('input[placeholder="Zip or City, State"], input', { timeout: 5000 });
+      if (zipInput) {
+        // type the zip code
+        await zipInput.type(ZIP_CODE, { delay: 100 });
+        // wit for suggestions box
+        await page.waitForSelector('#divQuery .autocomplete-suggestions .suggestion');
+        // select the first suggestion
+        await page.keyboard.press('ArrowDown');
+        // wait for the selection to be highlighted
+        await page.waitForSelector('#divQuery .autocomplete-suggestions .suggestion.selected');
+        // find and press the submit button
+        const goButton = await page.$('button[type="submit"]');
+        if (goButton) await goButton.click(); else await zipInput.press('Enter');
+        // wait for weather content to update
+        await page.waitForSelector('div.weather-display, #weather-content', { timeout: 30000 });
+        console.log('weather-display present');
+      }
+    } catch {}
+
+    // force ws4kp app to wide screen and kiosk (full screen), this removes the need to specify exactly where to crop for the screenshot
+
+    try {
+      // get the widescreen checkbox from the settings section
+			// will throw if the element is not present on ws4kp 7.x and a different path is taken in the catch statement
+			// which is the reason for the short timeout
+      const widescreenCheckbox = await page.waitForSelector('#settings-wide-checkbox', {timeout: 100});
+
+
+			// 6.x (classic) behavior
+			// only supports standard and wide, check and exit with an error if not doable
+			if (VIEW_MODE === 'wide-enhanced' || VIEW_MODE === 'portrait-enhanced') {
+				console.error(`This version of ws4kp only supports VIEW_MODE 'standard' or 'enhanced'`);
+				await browser.close();
+				process.exit();
+			}
+			// get the checkbox's current state and click it to turn it on if necessary
+			const widescreenChecked = await widescreenCheckbox.evaluate((el) => el.checked);
+			// click the checkbox on a mismatch
+			if (widescreenChecked && VIEW_MODE === 'standard' || !widescreenChecked && VIEW_MODE === 'wide') await widescreenCheckbox.click();
+    } catch {
+				try {
+				// 7.x (wide/portrait/enhanced behavior)
+				// get the selector box and select widescreen
+				const viewSelector = await page.waitForSelector('#settings-viewMode-select');
+				// set the desired mode
+				await viewSelector.evaluate((el, VIEW_MODE) => {
+					el.value = VIEW_MODE;
+					el.dispatchEvent(new Event('change'));
+				}, VIEW_MODE);
+			} catch {}
+
+		}
+		finally {
+			// both 6.x and 7.x support kiosk as a checkbox
+      // and now for kiosk
+      const kioskCheckbox = await page.waitForSelector('#settings-kiosk-checkbox');    // set the checkbox
+      const kioskChecked = await kioskCheckbox.evaluate((el) => el.checked);
+      if (!kioskChecked) await kioskCheckbox.click();
+		}
+  }
+  await page.setViewport({ ...VIEW_DIMENSIONS });
 }
 
 async function startTranscoding() {
@@ -151,7 +235,7 @@ async function startTranscoding() {
     .inputOptions([`-framerate ${FRAME_RATE}`])
     .input(path.join(__dirname,'audio_list.txt'))
     .inputOptions(['-f concat','-safe 0','-stream_loop -1'])
-    .complexFilter(['[0:v]scale=1280:720[v]','[1:a]volume=0.5[a]'])
+    .complexFilter([`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v]`,'[1:a]volume=0.5[a]'])
     .outputOptions(['-map [v]','-map [a]','-c:v libx264','-c:a aac','-b:a 128k','-preset ultrafast','-b:v 1000k','-f hls','-hls_time 2','-hls_list_size 2','-hls_flags delete_segments'])
     .output(HLS_FILE)
     .on('start',()=>{ console.log(`Started FFmpeg - Version ${VERSION}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
@@ -165,7 +249,7 @@ async function startTranscoding() {
       // Updated 16:9 capture for version 1.6
       const screenshot = await page.screenshot({
         type:'jpeg',
-        clip:{ x:4, y:50, width:840, height:470 } // crop top, right, and bottom based on your measurements
+        clip:{ x:0, y:0, ...VIEW_DIMENSIONS } // crop top, right, and bottom based on your measurements
       });
       ffmpegStream.write(screenshot);
     } catch(err){
