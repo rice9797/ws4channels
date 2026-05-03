@@ -150,6 +150,22 @@ async function startBrowser() {
         console.log('weather-display present');
       }
     } catch {}
+
+    // force ws4kp app to wide screen and kiosk (full screen), this removes the need to specify exactly where to crop for the screenshot
+
+    try {
+      // get the widescreen checkbox from the settings section
+      const widescreenCheckbox = await page.waitForSelector('#settings-wide-checkbox');
+      // get the checkbox's current state and click it to turn it on if necessary
+      const widescreenChecked = await widescreenCheckbox.evaluate((el) => el.checked);
+      if (!widescreenChecked) await widescreenCheckbox.click();
+
+      // and now for kiosk
+      const kioskCheckbox = await page.waitForSelector('#settings-kiosk-checkbox');
+      // set the checkbox
+      const kioskChecked = await kioskCheckbox.evaluate((el) => el.checked);
+      if (!kioskChecked) await kioskCheckbox.click();
+    } catch {}
   }
   await page.setViewport({ width:1280, height:720 });
 }
@@ -178,7 +194,7 @@ async function startTranscoding() {
       // Updated 16:9 capture for version 1.6
       const screenshot = await page.screenshot({
         type:'jpeg',
-        clip:{ x:4, y:50, width:840, height:470 } // crop top, right, and bottom based on your measurements
+        clip:{ x:0, y:0, width:1280, height:720 } // crop top, right, and bottom based on your measurements
       });
       ffmpegStream.write(screenshot);
     } catch(err){
