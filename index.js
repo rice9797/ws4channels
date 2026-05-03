@@ -14,6 +14,7 @@ const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
 const STREAM_PORT = process.env.STREAM_PORT || '9798';
 const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
+const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
 
@@ -125,19 +126,24 @@ async function startBrowser() {
     defaultViewport: null
   });
   page = await browser.newPage();
-  await page.goto(WS4KP_URL,{ waitUntil:'networkidle2', timeout:30000 });
-  try {
-    const zipInput = await page.waitForSelector('input[placeholder="Zip or City, State"], input',{ timeout:5000 });
-    if(zipInput){
-      await zipInput.type(ZIP_CODE,{ delay:100 });
-      await waitFor(1000);
-      await page.keyboard.press('ArrowDown');
-      await waitFor(500);
-      const goButton = await page.$('button[type="submit"]');
-      if(goButton) await goButton.click(); else await zipInput.press('Enter');
-      await page.waitForSelector('div.weather-display, #weather-content',{ timeout:30000 });
-    }
-  } catch {}
+  if (PERMALINK_URL) {
+    console.log(`Using custom permalink URL: ${PERMALINK_URL}`);
+    await page.goto(PERMALINK_URL, { waitUntil: 'networkidle2', timeout: 30000 });
+  } else {
+    await page.goto(WS4KP_URL, { waitUntil: 'networkidle2', timeout: 30000 });
+    try {
+      const zipInput = await page.waitForSelector('input[placeholder="Zip or City, State"], input', { timeout: 5000 });
+      if (zipInput) {
+        await zipInput.type(ZIP_CODE, { delay: 100 });
+        await waitFor(1000);
+        await page.keyboard.press('ArrowDown');
+        await waitFor(500);
+        const goButton = await page.$('button[type="submit"]');
+        if (goButton) await goButton.click(); else await zipInput.press('Enter');
+        await page.waitForSelector('div.weather-display, #weather-content', { timeout: 30000 });
+      }
+    } catch {}
+  }
   await page.setViewport({ width:1280, height:720 });
 }
 
@@ -150,7 +156,7 @@ async function startTranscoding() {
     .inputFormat('image2pipe')
     .inputOptions([`-framerate ${FRAME_RATE}`])
     .input(path.join(__dirname,'audio_list.txt'))
-    .inputOptions(['-f concat','-safe 0','-stream_loop -1'])
+    .inputOptions(['-f concat','-safe 0','-stream_loop -1','-vcodec png'])
     .complexFilter(['[0:v]scale=1280:720[v]','[1:a]volume=0.5[a]'])
     .outputOptions(['-map [v]','-map [a]','-c:v libx264','-c:a aac','-b:a 128k','-preset ultrafast','-b:v 1000k','-f hls','-hls_time 2','-hls_list_size 2','-hls_flags delete_segments'])
     .output(HLS_FILE)
@@ -164,7 +170,7 @@ async function startTranscoding() {
       if(page.isClosed()){ await startBrowser(); return; }
       // Updated 16:9 capture for version 1.6
       const screenshot = await page.screenshot({
-        type:'jpeg',
+        type:'png',
         clip:{ x:4, y:50, width:840, height:470 } // crop top, right, and bottom based on your measurements
       });
       ffmpegStream.write(screenshot);
