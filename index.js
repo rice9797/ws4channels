@@ -134,13 +134,20 @@ async function startBrowser() {
     try {
       const zipInput = await page.waitForSelector('input[placeholder="Zip or City, State"], input', { timeout: 5000 });
       if (zipInput) {
+        // type the zip code
         await zipInput.type(ZIP_CODE, { delay: 100 });
-        await waitFor(1000);
+        // wit for suggestions box
+        await page.waitForSelector('#divQuery .autocomplete-suggestions .suggestion');
+        // select the first suggestion
         await page.keyboard.press('ArrowDown');
-        await waitFor(500);
+        // wait for the selection to be highlighted
+        await page.waitForSelector('#divQuery .autocomplete-suggestions .suggestion.selected');
+        // find and press the submit button
         const goButton = await page.$('button[type="submit"]');
         if (goButton) await goButton.click(); else await zipInput.press('Enter');
+        // wait for weather content to update
         await page.waitForSelector('div.weather-display, #weather-content', { timeout: 30000 });
+        console.log('weather-display present');
       }
     } catch {}
   }
