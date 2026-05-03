@@ -1,11 +1,7 @@
 # Latest Update
 
 03/07/2026
-Added widescreen as default output, randomized music, and expand guide data compatiability for other programs like xTeVe, Telly, Threadfin, Plex, Jellyfin ect.
-
-***Please update/install your WS4KP container to use the following variable:***
-
-WSQS_settings_wide_checkbox=true
+Added widescreen as default output, randomized music, and expand guide data compatibility for other programs like xTeVe, Telly, Threadfin, Plex, Jellyfin ect.
 
 Pull ws4kp container.
 
@@ -22,7 +18,6 @@ docker run -d \
   --name ws4kp \
   --restart unless-stopped \
   -p 9090:8080 \
-  -e WSQS_settings_wide_checkbox=true \
   ghcr.io/netbymatt/ws4kp:latest
 ```
 
@@ -43,7 +38,7 @@ A Dockerized Node.js application to stream WeatherStar 4000 data into Channels D
 
 - 850MB availabe RAM
 - Docker installed
-- WS4KP running and installed with the WSQS_settings_wide_checkbox=true variable.
+- WS4KP running and installed
    https://github.com/netbymatt/ws4kp
   
 ## Usage
@@ -108,6 +103,8 @@ Environment Variables
     •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
   
     •  PERMALINK_URL: Pass configuration parameters via permalink generated from ws4kp
+	
+	•  VIEW_MODE: One of: `standard`, `wide` (default), `wide-enhanced` or `portrait-enhanced`. These values correspond to the modes available in ws4kp, with the last two only available in ws4kp v7.0+. Video sizes are 640x480, 1280x720 or 720x1280 to match.
 
 ## Hardware Acceleration Support
 

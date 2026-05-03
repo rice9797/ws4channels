@@ -23,6 +23,37 @@ const AUDIO_DIR = path.join(__dirname, 'music');
 const LOGO_DIR = path.join(__dirname, 'logo');
 const HLS_FILE = path.join(OUTPUT_DIR, 'stream.m3u8');
 
+// ws4kp 7.x supports 4 view modes: standard, wide, wide-enhanced, portrait-enhanced
+// sort out the user's preferences and set up appropriate constants
+const validViewModes = ['standard', 'wide', 'wide-enhanced', 'portrait-enhanced'];
+// get the view mode (or default) and make it lower case
+const desiredViewMode = (process.env.VIEW_MODE || 'wide').toLowerCase();
+// test against the valid modes and set up the constant
+const VIEW_MODE = validViewModes.includes(desiredViewMode) ? desiredViewMode : 'wide';
+
+// set up the width and height constants via immediately invoked function
+const VIEW_DIMENSIONS = (()=>{
+	switch(VIEW_MODE) {
+		case 'standard':
+			return {
+				width: 640,
+				height: 480,
+			}
+		case 'portrait-enhanced':
+			return {
+				width: 720,
+				height: 1280,
+			}
+		case 'wide':
+		case 'wide-enhanced':
+		default:
+			return {
+				width: 1280,
+				height: 720,
+			}
+	}
+})();
+
 [OUTPUT_DIR, AUDIO_DIR, LOGO_DIR].forEach(dir => { if (!fs.existsSync(dir)) fs.mkdirSync(dir); });
 
 app.use('/stream', express.static(OUTPUT_DIR));
@@ -161,19 +192,26 @@ async function startBrowser() {
 
 
 			// 6.x (classic) behavior
-				// get the checkbox's current state and click it to turn it on if necessary
-				const widescreenChecked = await widescreenCheckbox.evaluate((el) => el.checked);
-				if (!widescreenChecked) await widescreenCheckbox.click();
+			// only supports standard and wide, check and exit with an error if not doable
+			if (VIEW_MODE === 'wide-enhanced' || VIEW_MODE === 'portrait-enhanced') {
+				console.error(`This version of ws4kp only supports VIEW_MODE 'standard' or 'enhanced'`);
+				await browser.close();
+				process.exit();
+			}
+			// get the checkbox's current state and click it to turn it on if necessary
+			const widescreenChecked = await widescreenCheckbox.evaluate((el) => el.checked);
+			// click the checkbox on a mismatch
+			if (widescreenChecked && VIEW_MODE === 'standard' || !widescreenChecked && VIEW_MODE === 'wide') await widescreenCheckbox.click();
     } catch {
 				try {
 				// 7.x (wide/portrait/enhanced behavior)
 				// get the selector box and select widescreen
 				const viewSelector = await page.waitForSelector('#settings-viewMode-select');
 				// set the desired mode
-				await viewSelector.evaluate((el) => {
-					el.value = 'wide';
+				await viewSelector.evaluate((el, VIEW_MODE) => {
+					el.value = VIEW_MODE;
 					el.dispatchEvent(new Event('change'));
-				})
+				}, VIEW_MODE);
 			} catch {}
 
 		}
@@ -185,7 +223,7 @@ async function startBrowser() {
       if (!kioskChecked) await kioskCheckbox.click();
 		}
   }
-  await page.setViewport({ width:1280, height:720 });
+  await page.setViewport({ ...VIEW_DIMENSIONS });
 }
 
 async function startTranscoding() {
@@ -198,7 +236,7 @@ async function startTranscoding() {
     .inputOptions([`-framerate ${FRAME_RATE}`])
     .input(path.join(__dirname,'audio_list.txt'))
     .inputOptions(['-f concat','-safe 0','-stream_loop -1'])
-    .complexFilter(['[0:v]scale=1280:720[v]','[1:a]volume=0.5[a]'])
+    .complexFilter([`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v]`,'[1:a]volume=0.5[a]'])
     .outputOptions(['-map [v]','-map [a]','-c:v libx264','-c:a aac','-b:a 128k','-preset ultrafast','-b:v 1000k','-f hls','-hls_time 2','-hls_list_size 2','-hls_flags delete_segments'])
     .output(HLS_FILE)
     .on('start',()=>{ console.log(`Started FFmpeg - Version ${VERSION}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
@@ -212,7 +250,7 @@ async function startTranscoding() {
       // Updated 16:9 capture for version 1.6
       const screenshot = await page.screenshot({
         type:'jpeg',
-        clip:{ x:0, y:0, width:1280, height:720 } // crop top, right, and bottom based on your measurements
+        clip:{ x:0, y:0, ...VIEW_DIMENSIONS } // crop top, right, and bottom based on your measurements
       });
       ffmpegStream.write(screenshot);
     } catch(err){
