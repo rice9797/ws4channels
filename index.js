@@ -155,17 +155,35 @@ async function startBrowser() {
 
     try {
       // get the widescreen checkbox from the settings section
-      const widescreenCheckbox = await page.waitForSelector('#settings-wide-checkbox');
-      // get the checkbox's current state and click it to turn it on if necessary
-      const widescreenChecked = await widescreenCheckbox.evaluate((el) => el.checked);
-      if (!widescreenChecked) await widescreenCheckbox.click();
+			// will throw if the element is not present on ws4kp 7.x and a different path is taken in the catch statement
+			// which is the reason for the short timeout
+      const widescreenCheckbox = await page.waitForSelector('#settings-wide-checkbox', {timeout: 100});
 
+
+			// 6.x (classic) behavior
+				// get the checkbox's current state and click it to turn it on if necessary
+				const widescreenChecked = await widescreenCheckbox.evaluate((el) => el.checked);
+				if (!widescreenChecked) await widescreenCheckbox.click();
+    } catch {
+				try {
+				// 7.x (wide/portrait/enhanced behavior)
+				// get the selector box and select widescreen
+				const viewSelector = await page.waitForSelector('#settings-viewMode-select');
+				// set the desired mode
+				await viewSelector.evaluate((el) => {
+					el.value = 'wide';
+					el.dispatchEvent(new Event('change'));
+				})
+			} catch {}
+
+		}
+		finally {
+			// both 6.x and 7.x support kiosk as a checkbox
       // and now for kiosk
-      const kioskCheckbox = await page.waitForSelector('#settings-kiosk-checkbox');
-      // set the checkbox
+      const kioskCheckbox = await page.waitForSelector('#settings-kiosk-checkbox');    // set the checkbox
       const kioskChecked = await kioskCheckbox.evaluate((el) => el.checked);
       if (!kioskChecked) await kioskCheckbox.click();
-    } catch {}
+		}
   }
   await page.setViewport({ width:1280, height:720 });
 }
