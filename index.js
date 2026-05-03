@@ -156,7 +156,7 @@ async function startTranscoding() {
     .inputFormat('image2pipe')
     .inputOptions([`-framerate ${FRAME_RATE}`])
     .input(path.join(__dirname,'audio_list.txt'))
-    .inputOptions(['-f concat','-safe 0','-stream_loop -1'])
+    .inputOptions(['-f concat','-safe 0','-stream_loop -1','-vcodec png'])
     .complexFilter(['[0:v]scale=1280:720[v]','[1:a]volume=0.5[a]'])
     .outputOptions(['-map [v]','-map [a]','-c:v libx264','-c:a aac','-b:a 128k','-preset ultrafast','-b:v 1000k','-f hls','-hls_time 2','-hls_list_size 2','-hls_flags delete_segments'])
     .output(HLS_FILE)
@@ -170,7 +170,7 @@ async function startTranscoding() {
       if(page.isClosed()){ await startBrowser(); return; }
       // Updated 16:9 capture for version 1.6
       const screenshot = await page.screenshot({
-        type:'jpeg',
+        type:'png',
         clip:{ x:4, y:50, width:840, height:470 } // crop top, right, and bottom based on your measurements
       });
       ffmpegStream.write(screenshot);
