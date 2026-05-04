@@ -1,5 +1,7 @@
 # Latest Update
 
+05/04/2026
+Added PR from netbymatt changing from jpeg to png.
 05/03/2026
 Added PR from ws4kp's netbymatt in anticipation of ws4kp versions 7.X and addition of PERMALINK_URL: Pass configuration parameters via permalink generated from ws4kp.  As usual I did not have time to test the update so please report any issues.
 
