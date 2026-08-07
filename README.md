@@ -83,7 +83,7 @@ Example:
 
 -PERMALINK_URL=  Add if you created a permalink within ws4kp, delete this variable if not.
 
--63101= enter your zip code
+-ZIP_CODE= enter your zip code
 
 -WS4KP_PORT= this is the port you set up WeatherStar4000 container with if you didn’t choose another port that container defaults to 8080.
 
@@ -113,8 +113,8 @@ Environment Variables
 
 ## Hardware Acceleration, ARM Multi Arch Support
 
-Currently hardware encoding and Multi Arch are not supported. 
-
+Currently hardware encoding is not supported
+An ARM-compatible image can be built using Dockerfile.arm
 
 ### Accessing the Stream
 
