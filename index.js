@@ -37,6 +37,12 @@ const SEGMENT_STALL_WARN_MS = 8000;
 const SEGMENT_CHECK_INTERVAL_MS = 2000;
 const STDERR_BUFFER_LINES = 40;
 
+const GUIDE_CHANNEL_ID = process.env.GUIDE_CHANNEL_ID || 'WS4000';
+const GUIDE_CHANNEL_NAME = process.env.GUIDE_CHANNEL_NAME || 'WeatherStar 4000';
+const GUIDE_PROGRAMME_NAME = process.env.GUIDE_PROGRAMME_NAME || 'Local Weather';
+const GUIDE_PROGRAMME_DESC = process.env.GUIDE_PROGRAMME_DESC || 'Enjoy your local weather with a touch of nostalgia.';
+const GUIDE_M3U_CHANNEL_ID = process.env.GUIDE_M3U_CHANNEL_ID || 'weatherStar4000';
+
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const AUDIO_DIR = path.join(__dirname, 'music');
 const LOGO_DIR = path.join(__dirname, 'logo');
@@ -180,8 +186,8 @@ function generateXMLTV(host) {
   let xml = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE tv SYSTEM "xmltv.dtd">
 <tv>
-<channel id="WS4000">
-<display-name>WeatherStar 4000</display-name>
+<channel id="${GUIDE_CHANNEL_ID}">
+<display-name>${GUIDE_CHANNEL_NAME}</display-name>
 <icon src="${baseUrl}/logo/ws4000.png" />
 </channel>`;
   for(let i=0;i<24;i++){
@@ -190,9 +196,9 @@ function generateXMLTV(host) {
     const start = startTime.toISOString().replace(/[-:T]/g,'').split('.')[0]+' +0000';
     const end = endTime.toISOString().replace(/[-:T]/g,'').split('.')[0]+' +0000';
     xml += `
-<programme start="${start}" stop="${end}" channel="WS4000">
-<title lang="en">Local Weather</title>
-<desc lang="en">Enjoy your local weather with a touch of nostalgia.</desc>
+<programme start="${start}" stop="${end}" channel="${GUIDE_CHANNEL_ID}">
+<title lang="en">${GUIDE_PROGRAMME_NAME}</title>
+<desc lang="en">${GUIDE_PROGRAMME_DESC}</desc>
 <icon src="${baseUrl}/logo/ws4000.png" />
 </programme>`;
   }
@@ -497,7 +503,7 @@ app.get('/playlist.m3u',(req,res)=>{
   const host = req.headers.host || `localhost:${STREAM_PORT}`;
   const baseUrl = `http://${host}`;
   const m3uContent = `#EXTM3U
-#EXTINF:-1 channel-id="weatherStar4000" tvg-id="weatherStar4000" tvg-channel-no="275" tvc-guide-placeholders="3600" tvc-guide-title="Local Weather" tvc-guide-description="Enjoy your local weather with a touch of nostalgia." tvc-guide-art="${baseUrl}/logo/ws4000.png" tvg-logo="${baseUrl}/logo/ws4000.png",WeatherStar 4000
+#EXTINF:-1 channel-id="${GUIDE_M3U_CHANNEL_ID}" tvg-id="${GUIDE_M3U_CHANNEL_ID}" tvg-channel-no="275" tvc-guide-placeholders="3600" tvc-guide-title="${GUIDE_PROGRAMME_NAME}" tvc-guide-description="${GUIDE_PROGRAMME_DESC}" tvc-guide-art="${baseUrl}/logo/ws4000.png" tvg-logo="${baseUrl}/logo/ws4000.png",${GUIDE_CHANNEL_NAME}
 ${baseUrl}/stream/stream.m3u8
 `;
   res.set('Content-Type','application/x-mpegURL'); res.send(m3uContent);

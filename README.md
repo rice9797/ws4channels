@@ -118,6 +118,16 @@ Environment Variables
 	
 	•  VIEW_MODE: One of: `standard`, `wide` (default), `wide-enhanced` or `portrait-enhanced`. These values correspond to the modes available in ws4kp, with the last two only available in ws4kp v7.0+. Video sizes are 640x480, 1280x720 or 720x1280 to match.
 
+	•  GUIDE_CHANNEL_ID: (default 'WS4000')
+
+	•  GUIDE_CHANNEL_NAME: (default 'WeatherStar 4000')
+
+	•  GUIDE_PROGRAMME_NAME: (default 'Local Weather')
+
+	•  GUIDE_PROGRAMME_DESC: (default 'Enjoy your local weather with a touch of nostalgia.')
+
+	•  GUIDE_M3U_CHANNEL_ID: (default 'weatherStar4000')
+
 ## Hardware Acceleration, ARM Multi Arch Support
 
 Currently hardware encoding and Multi Arch are not supported. 
