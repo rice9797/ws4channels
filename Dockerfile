@@ -1,8 +1,13 @@
 FROM node:18
 
-# Install FFmpeg and Puppeteer dependencies
+# Install FFmpeg with VAAPI support and Puppeteer dependencies
 RUN apt-get update && apt-get install -y \
   ffmpeg \
+  libva2 \
+  libva-drm2 \
+  libva-x11-2 \
+  vainfo \
+  intel-media-driver \
   libnss3 \
   libatk1.0-0 \
   libatk-bridge2.0-0 \
@@ -29,4 +34,3 @@ COPY logo/*.png /app/logo/
 # Use STREAM_PORT environment variable for dynamic port
 EXPOSE $STREAM_PORT
 CMD ["node", "index.js"]
-
