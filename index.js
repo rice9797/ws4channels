@@ -405,8 +405,24 @@ async function startTranscoding() {
     .inputOptions([`-framerate ${FRAME_RATE}`])
     .input(path.join(__dirname,'audio_list.txt'))
     .inputOptions(['-f concat','-safe 0','-stream_loop -1','-vcodec png'])
-.complexFilter([`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v]`,'[1:a]volume=0.5[a]'])
-.outputOptions(['-map [v]','-map [a]','-c:v h264_vaapi','-c:a aac','-b:a 128k','-rc_mode 2',`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,'-b:v 1000k','-f hls',`-hls_time ${HLS_SEGMENT_SECONDS}`,'-hls_list_size 6','-hls_flags delete_segments'])
+    .complexFilter([
+		`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v]`,
+		'[1:a]volume=0.5[a]'
+	])
+    .outputOptions([
+		'-map [v]',
+		'-map [a]',
+		'-c:v h264_vaapi',
+		'-c:a aac','-b:a 128k',
+		'-rc_mode 2',
+		`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,
+		'-b:v 1000k',
+		'-f hls',
+		`-hls_time ${HLS_SEGMENT_SECONDS}`,
+		'-hls_list_size 6',
+		'-hls_flags delete_segments'
+	])
+	.output(HLS_FILE)
     .on('start',(cmd)=>{ logTS(`Started FFmpeg - Version ${VERSION}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
     .on('stderr', line => {
       stderrBuffer.push(line);
