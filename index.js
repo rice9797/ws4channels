@@ -406,7 +406,7 @@ async function startTranscoding() {
     .input(path.join(__dirname,'audio_list.txt'))
     .inputOptions(['-f concat','-safe 0','-stream_loop -1','-vcodec png'])
     .complexFilter([
-		`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v],format=nv12,hwupload[v]`,
+		`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height},format=nv12,hwupload[v]`,
 		'[1:a]volume=0.5[a]'
 	])
     .outputOptions([
@@ -423,7 +423,11 @@ async function startTranscoding() {
 		'-hls_flags delete_segments'
 	])
 	.output(HLS_FILE)
-    .on('start',(cmd)=>{ logTS(`Started FFmpeg - Version ${VERSION}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
+    .on('start',(cmd)=>{
+		logTS(`Started FFmpeg - Version ${VERSION}`);
+		logTS(`FFmpeg command: ${cmd}`);
+		setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY);
+	})
     .on('stderr', line => {
       stderrBuffer.push(line);
       if (stderrBuffer.length > STDERR_BUFFER_LINES) stderrBuffer.shift();
