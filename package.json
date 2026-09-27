@@ -1,7 +1,10 @@
 {
-  "name": "ws4channels",
+  "name": "@flashdim/ws4channels",
   "version": "1.0.0",
   "main": "index.js",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "dependencies": {
     "express": "^5.1.0",
     "puppeteer": "^24.6.0",
