@@ -1,19 +1,8 @@
-# Latest Update
+# Changes from source repo
 
-08/31/2026 version2.4 - Added ffmpeg-side logging (segment watchdog, progress tracking, stderr capture); removed capture-side hang watchdog (proven unnecessary).
-
-08/16/2026 version2.3 Added more logging.  Added another attempt to fix rare stream being more than 3 minutes behind and racing catchup. 
-
-08/10/2026 version2.2  Added another attempt to fix rare stream being more than 3 minutes behind and racing catchup.  Updates so regional maps and radar are drawn full-screen and properly centered on the user's location.
-
-
-07/11/2026 version2.1  Added attempt to fix rare stream being more than 3 minutes behind and racing catchup.  Added better logging to troubleshoot this issue.http://<host>:9798/health
-
-05/04/2026
-Added PR from netbymatt changing from jpeg to png.
-
-05/03/2026
-Added PR from ws4kp's netbymatt in anticipation of ws4kp versions 7.X and addition of PERMALINK_URL: Pass configuration parameters via permalink generated from ws4kp.  As usual I did not have time to test the update so please report any issues.
+This is a dedicated VAAPI accelerated version of ws4channels, an attempt to improve performance on AMD hardware.
+This requires a netbymatt/ws4k service running to emulate a 90s-style WeatherStar 4000, hosted via http.
+This service creates an M3U video stream of the forecast using Puppeteer to screen cap the page, creates the video with ffmepg, and adds music and XMLTV support.
 
 Pull ws4kp container.
 
