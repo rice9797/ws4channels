@@ -8,7 +8,6 @@
   "dependencies": {
     "express": "^5.1.0",
     "puppeteer": "^24.6.0",
-    "fluent-ffmpeg": "^2.1.3",
-    "xvfb": "^0.4.0"
+    "fluent-ffmpeg": "^2.1.3"
   }
 }

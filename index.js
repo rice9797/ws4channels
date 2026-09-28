@@ -5,7 +5,6 @@ const path = require('path');
 const fs = require('fs');
 const { PassThrough } = require('stream');
 const os = require('os');
-const Xvfb = require('xvfb');
 
 // Increase the process listener limit. Puppeteer registers process-level
 // exit/SIGINT/SIGTERM/SIGHUP listeners on every browser launch and does not
@@ -81,7 +80,6 @@ app.use('/logo', express.static(LOGO_DIR));
 
 let ffmpegProc = null;
 let ffmpegStream = null;
-let xvfb = null;
 let browser = null;
 let page = null;
 let captureInterval = null;
@@ -214,24 +212,17 @@ async function startBrowser(reason = 'initial startup') {
     browserRestartCount++;
     logTS(`Launching browser (launch #${browserRestartCount}, reason: ${reason})`);
     if(browser) await browser.close().catch(()=>{});
-    if(xvfb) await xvfb.stop().catch(()=>{});
-    xvfb = new Xvfb ({
-        silent: true,
-        xvfb_args: ["-screen", "0", '1280x720x24', "-ac"],
-    }); 
-    xvfb.startSync((err)=>{if (err) console.error(err)})
     browser = await puppeteer.launch({
-      headless: false,
+      headless: true,
       args:[
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-infobars',
         '--ignore-certificate-errors',
-        '--start-fullscreen',
+        '--window-size=1280,720',
         '--disable-dev-shm-usage',
         '--disable-software-rasterizer',
-        '--disable-extensions',
-        '--display='+xvfb._display
+        '--disable-extensions'
       ],
       defaultViewport: null
     });
@@ -484,7 +475,6 @@ async function startTranscoding() {
       // Updated 16:9 capture for version 1.6
       const screenshot = await page.screenshot({
         type:'png',
-        optimizeForSpeed:true,
         clip:{ x:0, y:0, ...VIEW_DIMENSIONS } // crop top, right, and bottom based on your measurements
       });
 
