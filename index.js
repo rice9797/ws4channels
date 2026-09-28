@@ -574,7 +574,7 @@ app.get('/playlist.m3u',(req,res)=>{
   const host = req.headers.host || `localhost:${STREAM_PORT}`;
   const baseUrl = `http://${host}`;
   const m3uContent = `#EXTM3U
-#EXTINF:-1 channel-id="weatherStar4000" tvg-id="weatherStar4000" tvg-channel-no="275" tvc-guide-placeholders="3600" tvc-guide-title="Local Weather" tvc-guide-description="Enjoy your local weather with a touch of nostalgia." tvc-guide-art="${baseUrl}/logo/ws4000.png" tvg-logo="${baseUrl}/logo/ws4000.png",WeatherStar 4000
+#EXTINF:-1 channel-id="weatherStar4000" tvg-id="weatherStar4000" tvg-channel-no="275" tvc-guide-placeholders="3600" tvc-guide-title="Local Weather" tvc-guide-description="Enjoy your local weather with a touch of nostalgia."
 ${baseUrl}/stream/stream.m3u8
 `;
   res.set('Content-Type','application/x-mpegURL'); res.send(m3uContent);
