@@ -221,7 +221,6 @@ async function startBrowser(reason = 'initial startup') {
         '--ignore-certificate-errors',
         '--window-size=1280,720',
         '--disable-dev-shm-usage',
-        '--disable-gpu',
         '--disable-software-rasterizer',
         '--disable-extensions'
       ],
@@ -422,7 +421,7 @@ async function startTranscoding() {
 	'-b:a 128k',
 	'-rc_mode 2',
 	`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,
-	'-b:v 3000k',
+	'-b:v 1500k',
 	'-f hls',
 	`-hls_time ${HLS_SEGMENT_SECONDS}`,
 	'-hls_list_size 6',
