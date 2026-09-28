@@ -233,7 +233,7 @@ async function startBrowser(reason = 'initial startup') {
         '--disable-extensions',
         '--display='+xvfb._display
       ],
-      defaultViewport: null
+      defaultViewport: { ...VIEW_DIMENSIONS }
     });
     page = await browser.newPage();
     if (PERMALINK_URL) {
