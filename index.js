@@ -1,10 +1,10 @@
-const express = require('express');
-const puppeteer = require('puppeteer');
-const ffmpeg = require('fluent-ffmpeg');
-const path = require('path');
-const fs = require('fs');
-const { PassThrough } = require('stream');
-const os = require('os');
+import puppeteer from 'puppeteer';
+import express from 'express';
+import ffmpeg from 'fluent-ffmpeg';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
+import { PassThrough } from 'stream';
 
 // Increase the process listener limit. Puppeteer registers process-level
 // exit/SIGINT/SIGTERM/SIGHUP listeners on every browser launch and does not
@@ -13,7 +13,7 @@ const os = require('os');
 process.setMaxListeners(50);
 
 const app = express();
-
+const __dirname = path.dirname(new URL(import.meta.url).pathname)
 const VERSION = '2.4'; // version 2.4 - ffmpeg-side logging (segment watchdog, progress tracking, stderr capture); removed capture-side hang watchdog (proven unnecessary)
 const ZIP_CODE = process.env.ZIP_CODE || '90210';
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
@@ -219,7 +219,7 @@ async function startBrowser(reason = 'initial startup') {
         '--disable-setuid-sandbox',
         '--disable-infobars',
         '--ignore-certificate-errors',
-        '--window-size=1280,720',
+        '--window-size='+VIEW_DIMENSIONS.width+','+VIEW_DIMENSIONS.height,
         '--disable-dev-shm-usage',
         '--disable-software-rasterizer',
         '--disable-extensions'
@@ -475,7 +475,7 @@ async function startTranscoding() {
       // Updated 16:9 capture for version 1.6
       const screenshot = await page.screenshot({
         type:'png',
-        clip:{ x:0, y:0, ...VIEW_DIMENSIONS } // crop top, right, and bottom based on your measurements
+        optimizeForSpeed:true
       });
 
       const elapsedMs = Date.now() - captureStartedAt;
