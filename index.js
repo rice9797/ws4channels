@@ -219,7 +219,7 @@ async function startBrowser(reason = 'initial startup') {
         '--disable-setuid-sandbox',
         '--disable-infobars',
         '--ignore-certificate-errors',
-        '--window-size=1280,720',
+        '--window-size=`${VIEW_DIMENSIONS.width},${VIEW_DIMENSIONS.height}`,
         '--disable-dev-shm-usage',
         '--disable-software-rasterizer',
         '--disable-extensions'
