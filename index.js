@@ -1,4 +1,4 @@
-const puppeteer = import('puppeteer');
+const puppeteer = (...args) => import('puppeteer').then(({default: puppeteer}) => puppeteer(...args));
 const express = require('express');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
