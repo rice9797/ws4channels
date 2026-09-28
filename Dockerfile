@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
   libxrandr2 \
   libgbm1 \
   libasound2 \
-  && rm -rf /var/lib/apt/lists/*
+  xvfb 
 
 WORKDIR /app
 COPY package*.json ./
