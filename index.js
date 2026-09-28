@@ -475,6 +475,7 @@ async function startTranscoding() {
       // Updated 16:9 capture for version 1.6
       const screenshot = await page.screenshot({
         type:'png',
+        optimizeForSpeed:true,
         clip:{ x:0, y:0, ...VIEW_DIMENSIONS } // crop top, right, and bottom based on your measurements
       });
 
