@@ -409,10 +409,14 @@ async function startTranscoding() {
 		'-safe 0',
 		'-stream_loop -1'
 	])
-    .complexFilter([
-		`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height},format=nv12,hwupload[v]`,
-		'[1:a]aresample=48000:async=1:first_pts=0,aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,volume=0.5[a]'
-	])
+    .videoFilters(`scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height},format=nv12,hwupload`)
+    .audioFilters('aresample=48000,volume=0.5')
+    .outputOptions([
+      '-c:v h264_vaapi',
+      '-c:a aac',
+      '-b:a 128k',
+      '-rc_mode 2',
+      `
     .outputOptions([
 		'-map [v]',
 		'-map [a]',
@@ -420,7 +424,7 @@ async function startTranscoding() {
 		'-c:a aac','-b:a 128k',
 		'-rc_mode 2',
 		`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,
-		'-b:v 1000k',
+		'-b:v 3000k',
 		'-f hls',
 		`-hls_time ${HLS_SEGMENT_SECONDS}`,
 		'-hls_list_size 6',
