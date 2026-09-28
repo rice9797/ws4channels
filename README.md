@@ -92,6 +92,8 @@ Environment Variables
  
 	•  WS4KP_PORT: Port for WS4KP (default: 8080)
  
+	•  WS4KP_SCANLINES: Enable scanlines filter (default: false)
+
 	•  --cpus: CPU limit (default: 1.0)
  
 	•  --memory: RAM limit in MB (default: 1096)
@@ -126,9 +128,6 @@ In Channels DVR, use MPEG-TS format with this URL.
  http://<ip.of.pc.running.ws4channels>:9798/guide.xml
 
 Example: <http://192.168.1.131:9798/guide.xml>
-
-Latest additions
- 6/21/25 Update:
 
 ## Music Configuration
 
