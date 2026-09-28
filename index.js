@@ -3,10 +3,9 @@ const puppeteer = require('puppeteer');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
-const { PassThrough, Writable } = require('stream');
+const { PassThrough } = require('stream');
 const os = require('os');
 const Xvfb = require('xvfb');
-const { spawn } = require('child_process');
 
 // Increase the process listener limit. Puppeteer registers process-level
 // exit/SIGINT/SIGTERM/SIGHUP listeners on every browser launch and does not
@@ -16,7 +15,7 @@ process.setMaxListeners(50);
 
 const app = express();
 
-const VERSION = '2.5'; // version 2.5 - xvfb framebuffer capture instead of puppeteer screenshots
+const VERSION = '2.4'; // version 2.4 - ffmpeg-side logging (segment watchdog, progress tracking, stderr capture); removed capture-side hang watchdog (proven unnecessary)
 const ZIP_CODE = process.env.ZIP_CODE || '90210';
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
@@ -24,7 +23,7 @@ const STREAM_PORT = process.env.STREAM_PORT || '9798';
 const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
 const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
-const FRAME_RATE = process.env.FRAME_RATE || 25;
+const FRAME_RATE = process.env.FRAME_RATE || 10;
 const HLS_SEGMENT_SECONDS = 2;
 
 // Optional proactive browser refresh. If set to a number > 0, the browser
@@ -85,14 +84,13 @@ let ffmpegStream = null;
 let xvfb = null;
 let browser = null;
 let page = null;
-let captureProcess = null;
 let captureInterval = null;
 let refreshTimer = null;
 let segmentWatchdogInterval = null;
 let isStreamReady = false;
 
 // --- State for backpressure + overlap protection + restart diagnostics ---
-let isCapturing = false;         // prevents overlapping capture calls
+let isCapturing = false;         // prevents overlapping screenshot calls
 let isRestartingBrowser = false; // prevents overlapping/concurrent browser launches
 let canWrite = true;             // false when ffmpegStream's internal buffer is full
 let browserRestartCount = 0;     // how many times we've had to relaunch the browser
@@ -101,12 +99,13 @@ let framesSkippedBackpressure = 0;
 let framesSkippedOverlap = 0;
 let framesSkippedRestarting = 0;
 
-// --- Framebuffer capture timing ---
-let totalCaptureMs = 0;
-let maxCaptureMs = 0;
-let captureStartedAt = null; // timestamp of the currently in-flight capture, or null
+// --- Screenshot timing (kept — cheap, and useful as a "capture side is
+// healthy" baseline now that we've ruled it out as the freeze cause) ---
+let totalScreenshotMs = 0;
+let maxScreenshotMs = 0;
+let captureStartedAt = null; // timestamp of the currently in-flight screenshot, or null
 
-// --- ffmpeg-side instrumentation ---
+// --- ffmpeg-side instrumentation (new) ---
 let stderrBuffer = [];              // rolling buffer of the last N ffmpeg stderr lines
 let lastProgress = null;            // most recent fluent-ffmpeg 'progress' payload
 let lastProgressAt = null;          // when we last received a progress event
@@ -172,6 +171,7 @@ function createAudioInputFile() {
   const audioList = files.map(file => `file '${path.join(AUDIO_DIR, file)}'`).join('\n');
   fs.writeFileSync(path.join(__dirname, 'audio_list.txt'), audioList);
 
+
   // Note: Update README to inform users they can add MP3 files to the 'music' folder
   // and that the default files (listed above) are used if no MP3s are found.
 }
@@ -202,50 +202,6 @@ function generateXMLTV(host) {
   return xml;
 }
 
-/**
- * Capture a single frame from the xvfb framebuffer.
- * Uses ffmpeg to grab the display and convert to PNG (faster than ImageMagick).
- * Returns a Promise that resolves with the PNG buffer.
- */
-async function captureFramebufferFrame() {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    
-    // Use ffmpeg's x11grab to capture the xvfb framebuffer.
-    // This is typically much faster than puppeteer screenshots because
-    // we're pulling raw pixels from the display server.
-    const captureProc = spawn('ffmpeg', [
-      '-f', 'x11grab',
-      '-video_size', `${VIEW_DIMENSIONS.width}x${VIEW_DIMENSIONS.height}`,
-      '-framerate', '30', // internal, just reading one frame
-      '-i', xvfb._display,
-      '-vframes', '1',
-      '-pix_fmt', 'rgb24',
-      '-f', 'image2',
-      'pipe:1'
-    ], {
-      stdio: ['ignore', 'pipe', 'pipe'],
-      timeout: 5000 // fail if capture takes > 5s
-    });
-
-    captureProc.stdout.on('data', chunk => {
-      chunks.push(chunk);
-    });
-
-    captureProc.on('close', code => {
-      if (code === 0 && chunks.length > 0) {
-        resolve(Buffer.concat(chunks));
-      } else {
-        reject(new Error(`ffmpeg x11grab failed with code ${code}`));
-      }
-    });
-
-    captureProc.on('error', err => {
-      reject(err);
-    });
-  });
-}
-
 async function startBrowser(reason = 'initial startup') {
   // Hard lock: only one browser launch can be in progress at a time.
   if (isRestartingBrowser) {
@@ -259,13 +215,11 @@ async function startBrowser(reason = 'initial startup') {
     logTS(`Launching browser (launch #${browserRestartCount}, reason: ${reason})`);
     if(browser) await browser.close().catch(()=>{});
     if(xvfb) await xvfb.stop().catch(()=>{});
-    
     xvfb = new Xvfb ({
         silent: true,
         xvfb_args: ["-screen", "0", `${VIEW_DIMENSIONS.width}x${VIEW_DIMENSIONS.height}x24`, "-ac"],
     }); 
     xvfb.startSync((err)=>{if (err) console.error(err)})
-    
     browser = await puppeteer.launch({
       headless: false,
       args:[
@@ -292,7 +246,7 @@ async function startBrowser(reason = 'initial startup') {
         if (zipInput) {
           // type the zip code
           await zipInput.type(ZIP_CODE, { delay: 100 });
-          // wait for suggestions box
+          // wit for suggestions box
           await page.waitForSelector('#divQuery .autocomplete-suggestions .suggestion');
           // select the first suggestion
           await page.keyboard.press('ArrowDown');
@@ -313,6 +267,7 @@ async function startBrowser(reason = 'initial startup') {
         // will throw if the element is not present on ws4kp 7.x and a different path is taken in the catch statement
         // which is the reason for the short timeout
         const widescreenCheckbox = await page.waitForSelector('#settings-wide-checkbox', {timeout: 100});
+
 
         // 6.x (classic) behavior
         // only supports standard and wide, check and exit with an error if not doable
@@ -336,6 +291,7 @@ async function startBrowser(reason = 'initial startup') {
                 el.dispatchEvent(new Event('change'));
               }, VIEW_MODE);
             } catch {}
+
       }
       finally {
         // both 6.x and 7.x support kiosk as a checkbox
@@ -509,7 +465,7 @@ async function startTranscoding() {
       return;
     }
 
-    // Don't start a new capture if the previous one hasn't finished yet.
+    // Don't start a new screenshot if the previous one hasn't finished yet.
     if (isCapturing) {
       framesSkippedOverlap++;
       return;
@@ -525,24 +481,25 @@ async function startTranscoding() {
     captureStartedAt = Date.now();
     try{
       if(page.isClosed()){ isCapturing = false; captureStartedAt = null; await startBrowser('page was closed'); return; }
-      
-      // Capture framebuffer directly from xvfb using ffmpeg x11grab.
-      // This is significantly faster than puppeteer screenshots.
-      const frameBuffer = await captureFramebufferFrame();
+      // Updated 16:9 capture for version 1.6
+      const screenshot = await page.screenshot({
+        type:'png',
+        optimizeForSpeed:true
+      });
 
       const elapsedMs = Date.now() - captureStartedAt;
-      totalCaptureMs += elapsedMs;
-      if (elapsedMs > maxCaptureMs) maxCaptureMs = elapsedMs;
+      totalScreenshotMs += elapsedMs;
+      if (elapsedMs > maxScreenshotMs) maxScreenshotMs = elapsedMs;
 
-      const ok = ffmpegStream.write(frameBuffer);
+      const ok = ffmpegStream.write(screenshot);
       framesWritten++;
       if (!ok) canWrite = false; // wait for 'drain' before writing again
 
       // Every 5 minutes, log a quick health summary.
       if (framesWritten % (FRAME_RATE * 60 * 5) === 0) {
-        const avgMs = Math.round(totalCaptureMs / framesWritten);
+        const avgMs = Math.round(totalScreenshotMs / framesWritten);
         const sinceProgress = lastProgressAt ? (Date.now() - lastProgressAt) : null;
-        logTS(`Health check: framesWritten=${framesWritten}, avgCaptureMs=${avgMs}, maxCaptureMs=${maxCaptureMs}, skippedBackpressure=${framesSkippedBackpressure}, skippedOverlap=${framesSkippedOverlap}, skippedRestarting=${framesSkippedRestarting}, sinceLastProgress=${sinceProgress}ms`);
+        logTS(`Health check: framesWritten=${framesWritten}, avgScreenshotMs=${avgMs}, maxScreenshotMs=${maxScreenshotMs}, skippedBackpressure=${framesSkippedBackpressure}, skippedOverlap=${framesSkippedOverlap}, skippedRestarting=${framesSkippedRestarting}, browserRestarts=${browserRestartCount}, segmentStallWarnings=${segmentStallWarningsIssued}, msSinceLastFfmpegProgress=${sinceProgress}`);
       }
     } catch(err){
       console.warn('Capture error, retrying...', err.message);
@@ -553,7 +510,7 @@ async function startTranscoding() {
     }
     isCapturing = false;
     captureStartedAt = null;
-  }, 1000/FRAME_RATE);
+  },1000/FRAME_RATE);
 
   ffmpegProc.run();
 }
@@ -565,7 +522,6 @@ async function stopTranscoding(){
   refreshTimer=null;
   if(segmentWatchdogInterval) clearInterval(segmentWatchdogInterval);
   segmentWatchdogInterval=null;
-  if(captureProcess) { captureProcess.kill(); captureProcess=null; }
   if(ffmpegProc) ffmpegProc.kill('SIGINT'); ffmpegProc=null;
   if(browser) await browser.close().catch(()=>{}); browser=null;
 }
@@ -574,7 +530,7 @@ app.get('/playlist.m3u',(req,res)=>{
   const host = req.headers.host || `localhost:${STREAM_PORT}`;
   const baseUrl = `http://${host}`;
   const m3uContent = `#EXTM3U
-#EXTINF:-1 channel-id="weatherStar4000" tvg-id="weatherStar4000" tvg-channel-no="275" tvc-guide-placeholders="3600" tvc-guide-title="Local Weather" tvc-guide-description="Enjoy your local weather with a touch of nostalgia."
+#EXTINF:-1 channel-id="weatherStar4000" tvg-id="weatherStar4000" tvg-channel-no="275" tvc-guide-placeholders="3600" tvc-guide-title="Local Weather" tvc-guide-description="Enjoy your local weather with a touch of nostalgia." tvc-guide-art="${baseUrl}/logo/ws4000.png" tvg-logo="${baseUrl}/logo/ws4000.png",WeatherStar 4000
 ${baseUrl}/stream/stream.m3u8
 `;
   res.set('Content-Type','application/x-mpegURL'); res.send(m3uContent);
@@ -586,7 +542,7 @@ app.get('/guide.xml',(req,res)=>{
 });
 
 app.get('/health',(req,res)=>{
-  const avgCaptureMs = framesWritten > 0 ? Math.round(totalCaptureMs / framesWritten) : 0;
+  const avgScreenshotMs = framesWritten > 0 ? Math.round(totalScreenshotMs / framesWritten) : 0;
   const currentlyStuckMs = (isCapturing && captureStartedAt) ? (Date.now() - captureStartedAt) : 0;
   const msSinceLastSegmentChange = lastSegmentChangeAt ? (Date.now() - lastSegmentChangeAt) : null;
   const msSinceLastFfmpegProgress = lastProgressAt ? (Date.now() - lastProgressAt) : null;
@@ -598,8 +554,8 @@ app.get('/health',(req,res)=>{
     framesSkippedBackpressure,
     framesSkippedOverlap,
     framesSkippedRestarting,
-    avgCaptureMs,
-    maxCaptureMs,
+    avgScreenshotMs,
+    maxScreenshotMs,
     currentlyStuckMs,
     segmentStallWarningsIssued,
     segmentStallActive,
