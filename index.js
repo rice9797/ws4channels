@@ -1,5 +1,5 @@
+const puppeteer = import('puppeteer');
 const express = require('express');
-const puppeteer = require('puppeteer');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
