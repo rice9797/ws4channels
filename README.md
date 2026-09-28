@@ -1,6 +1,5 @@
 # Changes from source repo
 
-This is a dedicated VAAPI accelerated version of ws4channels, an attempt to improve performance on AMD hardware.
 This requires a netbymatt/ws4k service running to emulate a 90s-style WeatherStar 4000, hosted via http.
 This service creates an M3U video stream of the forecast using Puppeteer to screen cap the page, creates the video with ffmepg, and adds music and XMLTV support.
 
