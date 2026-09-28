@@ -217,7 +217,7 @@ async function startBrowser(reason = 'initial startup') {
     if(xvfb) await xvfb.stop().catch(()=>{});
     xvfb = new Xvfb ({
         silent: true,
-        xvfb_args: ["-screen", "0", `${VIEW_DIMENSIONS.width}x${VIEW_DIMENSIONS.height}x24`, "-ac"],
+        xvfb_args: ["-screen", "0", '640x480x24', "-ac"],
     }); 
     xvfb.startSync((err)=>{if (err) console.error(err)})
     browser = await puppeteer.launch({
