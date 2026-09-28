@@ -1,10 +1,10 @@
 import puppeteer from 'puppeteer';
 import express from 'express';
 import ffmpeg from 'fluent-ffmpeg';
-import path = from 'path';
-import fs = from 'fs';
-import os = from 'os';
-import { PassThrough } = rfrom 'stream';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
+import { PassThrough } from 'stream';
 
 // Increase the process listener limit. Puppeteer registers process-level
 // exit/SIGINT/SIGTERM/SIGHUP listeners on every browser launch and does not
