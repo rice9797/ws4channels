@@ -412,16 +412,9 @@ async function startTranscoding() {
     .videoFilters(`scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height},format=nv12,hwupload`)
     .audioFilters('aresample=48000,volume=0.5')
     .outputOptions([
-      '-c:v h264_vaapi',
-      '-c:a aac',
-      '-b:a 128k',
-      '-rc_mode 2',
-      `
-    .outputOptions([
-		'-map [v]',
-		'-map [a]',
 		'-c:v h264_vaapi',
-		'-c:a aac','-b:a 128k',
+		'-c:a aac',
+		'-b:a 128k',
 		'-rc_mode 2',
 		`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,
 		'-b:v 3000k',
