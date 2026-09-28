@@ -4,7 +4,9 @@ import ffmpeg from 'fluent-ffmpeg';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
-import { PassThrough } from 'stream';
+import Xvfb from 'xvfb';
+import { PassThrough, Writable } from 'stream';
+import { spawn } from 'child_process';
 
 // Increase the process listener limit. Puppeteer registers process-level
 // exit/SIGINT/SIGTERM/SIGHUP listeners on every browser launch and does not
@@ -22,7 +24,7 @@ const STREAM_PORT = process.env.STREAM_PORT || '9798';
 const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
 const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
-const FRAME_RATE = process.env.FRAME_RATE || 10;
+const FRAME_RATE = process.env.FRAME_RATE || 25;
 const HLS_SEGMENT_SECONDS = 2;
 
 // Optional proactive browser refresh. If set to a number > 0, the browser
@@ -82,13 +84,15 @@ let ffmpegProc = null;
 let ffmpegStream = null;
 let browser = null;
 let page = null;
+let captureProcess = null;
 let captureInterval = null;
 let refreshTimer = null;
 let segmentWatchdogInterval = null;
 let isStreamReady = false;
+let xvfb = null;
 
 // --- State for backpressure + overlap protection + restart diagnostics ---
-let isCapturing = false;         // prevents overlapping screenshot calls
+let isCapturing = false;         // prevents overlapping capture calls
 let isRestartingBrowser = false; // prevents overlapping/concurrent browser launches
 let canWrite = true;             // false when ffmpegStream's internal buffer is full
 let browserRestartCount = 0;     // how many times we've had to relaunch the browser
@@ -101,7 +105,7 @@ let framesSkippedRestarting = 0;
 // healthy" baseline now that we've ruled it out as the freeze cause) ---
 let totalScreenshotMs = 0;
 let maxScreenshotMs = 0;
-let captureStartedAt = null; // timestamp of the currently in-flight screenshot, or null
+let captureStartedAt = null; // timestamp of the currently in-flight Capture, or null
 
 // --- ffmpeg-side instrumentation (new) ---
 let stderrBuffer = [];              // rolling buffer of the last N ffmpeg stderr lines
@@ -212,8 +216,15 @@ async function startBrowser(reason = 'initial startup') {
     browserRestartCount++;
     logTS(`Launching browser (launch #${browserRestartCount}, reason: ${reason})`);
     if(browser) await browser.close().catch(()=>{});
+    if(xvfb) await xvfb.stop();
+    xvfb = new Xvfb ({
+        silent: true,
+        xvfb_args: ["-screen", "0", `${VIEW_DIMENSIONS.width}x${VIEW_DIMENSIONS.height}x24`,  "-ac"],
+    });
+    xvfb.startSync((err)=>{if (err) console.error(err)})
+    logTS(`XVFB launched`);
     browser = await puppeteer.launch({
-      headless: true,
+      headless: false,
       args:[
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -222,7 +233,8 @@ async function startBrowser(reason = 'initial startup') {
         '--window-size='+VIEW_DIMENSIONS.width+','+VIEW_DIMENSIONS.height,
         '--disable-dev-shm-usage',
         '--disable-software-rasterizer',
-        '--disable-extensions'
+        '--disable-extensions',
+        '--display='+xvfb._display
       ],
       defaultViewport: null
     });
@@ -265,6 +277,7 @@ async function startBrowser(reason = 'initial startup') {
         if (VIEW_MODE === 'wide-enhanced' || VIEW_MODE === 'portrait-enhanced') {
           console.error(`This version of ws4kp only supports VIEW_MODE 'standard' or 'enhanced'`);
           await browser.close();
+          await xvfb.stop();
           process.exit();
         }
         // get the checkbox's current state and click it to turn it on if necessary
@@ -400,7 +413,6 @@ async function startTranscoding() {
 
   ffmpegProc = ffmpeg()
     .input(ffmpegStream)
-    .inputFormat('image2pipe')
     .inputOptions([`-framerate ${FRAME_RATE}`])
     .input(path.join(__dirname,'audio_list.txt'))
     .inputOptions([
