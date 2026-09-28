@@ -13,7 +13,7 @@ import { PassThrough } from 'stream';
 process.setMaxListeners(50);
 
 const app = express();
-
+const __dirname = path.dirname(new URL(import.meta.url).pathname)
 const VERSION = '2.4'; // version 2.4 - ffmpeg-side logging (segment watchdog, progress tracking, stderr capture); removed capture-side hang watchdog (proven unnecessary)
 const ZIP_CODE = process.env.ZIP_CODE || '90210';
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
