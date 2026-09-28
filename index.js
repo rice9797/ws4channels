@@ -404,10 +404,14 @@ async function startTranscoding() {
     .inputFormat('image2pipe')
     .inputOptions([`-framerate ${FRAME_RATE}`])
     .input(path.join(__dirname,'audio_list.txt'))
-    .inputOptions(['-f concat','-safe 0','-stream_loop -1','-vcodec png'])
+    .inputOptions([
+		'-f concat',
+		'-safe 0',
+		'-stream_loop -1'
+	])
     .complexFilter([
 		`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height},format=nv12,hwupload[v]`,
-		'[1:a]volume=0.5[a]'
+		'[1:a]aresample=48000:async=1:first_pts=0,aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo,volume=0.5[a]'
 	])
     .outputOptions([
 		'-map [v]',
