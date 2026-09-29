@@ -27,6 +27,7 @@ const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 25;
 const HLS_SEGMENT_SECONDS = 2;
+const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
 // Optional proactive browser refresh. If set to a number > 0, the browser
 // will be relaunched on this interval (minutes) regardless of whether
@@ -205,6 +206,18 @@ function generateXMLTV(host) {
   return xml;
 }
 
+async function startXvfb(reason = 'initial startup') {
+  if(xvfb) await xvfb.stop();
+  xvfb = await new Xvfb ({
+    silent: true,
+    reuse: true,
+    xvfb_args: [":99", "-screen", "0", `${VIEW_DIMENSIONS.width}x${VIEW_DIMENSIONS.height}x24`,  "-ac"],
+  });
+  await xvfb.start((err)=>{if (err) console.error(err)})
+  await sleep(5000);
+  logTS(`XVFB launched with display: ${xvfb._display}`);
+}
+
 async function startBrowser(reason = 'initial startup') {
   // Hard lock: only one browser launch can be in progress at a time.
   if (isRestartingBrowser) {
@@ -217,13 +230,6 @@ async function startBrowser(reason = 'initial startup') {
     browserRestartCount++;
     logTS(`Launching browser (launch #${browserRestartCount}, reason: ${reason})`);
     if(browser) await browser.close().catch(()=>{});
-    if(xvfb) await xvfb.stop();
-    xvfb = new Xvfb ({
-        silent: true,
-        xvfb_args: ["-screen", "0", `${VIEW_DIMENSIONS.width}x${VIEW_DIMENSIONS.height}x24`,  "-ac"],
-    });
-    xvfb.startSync((err)=>{if (err) console.error(err)})
-    logTS(`XVFB launched`);
     browser = await puppeteer.launch({
       headless: false,
       args:[
@@ -233,9 +239,9 @@ async function startBrowser(reason = 'initial startup') {
         '--ignore-certificate-errors',
         '--window-size='+VIEW_DIMENSIONS.width+','+VIEW_DIMENSIONS.height,
         '--disable-dev-shm-usage',
-        '--disable-software-rasterizer',
         '--disable-extensions',
-        '--display='+xvfb._display
+        '--start-fullscreen',
+        '--display='+xvfb._display+'.0'
       ],
       defaultViewport: null
     });
@@ -278,7 +284,6 @@ async function startBrowser(reason = 'initial startup') {
         if (VIEW_MODE === 'wide-enhanced' || VIEW_MODE === 'portrait-enhanced') {
           console.error(`This version of ws4kp only supports VIEW_MODE 'standard' or 'enhanced'`);
           await browser.close();
-          await xvfb.stop();
           process.exit();
         }
         // get the checkbox's current state and click it to turn it on if necessary
@@ -396,6 +401,7 @@ function startSegmentWatchdog() {
 }
 
 async function startTranscoding() {
+  await startXvfb('initial startup');
   await startBrowser('initial startup');
   createAudioInputFile();
   scheduleBrowserRefresh();
@@ -413,22 +419,25 @@ async function startTranscoding() {
   lastProgressAt = null;
 
   ffmpegProc = ffmpeg()
-    .input(ffmpegStream)
-    .inputOptions([`-framerate ${FRAME_RATE}`])
+    .input(xvfb._display+'.0')
+    .inputOptions([
+      '-f x11grab',
+      `-framerate ${FRAME_RATE}`
+    ])
     .input(path.join(__dirname,'audio_list.txt'))
     .inputOptions([
-	'-f concat',
-	'-safe 0',
-	'-stream_loop -1'
+      '-f concat',
+      '-safe 0',
+	  '-stream_loop -1'
     ])
     .complexFilter([
-        `[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v]`,
-        '[1:a]aresample=48000,volume=0.5[a]'
+      `[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v]`,
+      '[1:a]aresample=48000,volume=0.5[a]'
     ])
     .outputOptions([
 	'-map [v]',
 	'-map [a]',
-	'-c:v libx264',
+    '-c:v libx264',
 	'-preset fast',
 	'-c:a aac',
 	'-b:a 128k',

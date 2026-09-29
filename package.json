@@ -1,7 +1,8 @@
 {
   "name": "@flashdim/ws4channels",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "exports": "./index.js",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
