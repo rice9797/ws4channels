@@ -21,9 +21,6 @@ docker run -d \
   ghcr.io/netbymatt/ws4kp:latest
 ```
 
-
-
-
 # Known Bugs
 Rare cases of the stream getting 30+ minutes behind and racing to catch up after stream is played long term.
 
@@ -98,15 +95,32 @@ Environment Variables
  
 	•  --memory: RAM limit in MB (default: 1096)
  
-	•  FRAME_RATE: Stream frame rate (default: 10)
+	•  VIEW_MODE: One of: `standard`, `wide` (default), `wide-enhanced` or `portrait-enhanced`. These values correspond to the modes available in ws4kp, with the last two only available in ws4kp v7.0+. Video sizes are 640x480, 1280x720 or 720x1280 to match.
+	
+	•  KBPS_BITRATE: Stream bitrate (default: 1000)
+	
+	•  FRAME_RATE: Stream frame rate (default: 15)
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
   
     •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
   
-    •  PERMALINK_URL: Pass configuration parameters via permalink generated from ws4kp
+    •  WS4KP_SCANLINES: Enable scanlines (default: true)
+
+    •  PERMALINK_URL (optional): Pass configuration parameters via permalink generated from ws4kp. You can use that, or the individual settings below.
 	
-	•  VIEW_MODE: One of: `standard`, `wide` (default), `wide-enhanced` or `portrait-enhanced`. These values correspond to the modes available in ws4kp, with the last two only available in ws4kp v7.0+. Video sizes are 640x480, 1280x720 or 720x1280 to match.
+    •  Forecast screens (all optional):
+	   WS4KP_CURRENT_WEATHER: (default: true)
+	   WS4KP_LATEST_OBSERVATIONS: (default: true)
+       WS4KP_HOURLY: (default: true)
+	   WS4KP_HOURLY_GRAPH: (default: false)
+	   WS4KP_TRAVEL: (default: false)
+	   WS4KP_REGIONAL_FORECAST: (default: true)
+	   WS4KP_LOCAL_FORECAST: (default: true)
+	   WS4KP_EXTENDED_FORECAST: (default: true)
+	   WS4KP_ALMANAC: (default: false)
+	   WS4KP_RADAR: (default: true)
+
 
 ## Hardware Acceleration, ARM Multi Arch Support
 
