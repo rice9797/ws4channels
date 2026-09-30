@@ -43,7 +43,7 @@ Step 1: Pull the Docker Image
 
 ```bash
 
-docker pull ghcr.io/rice9797/ws4channels:latest
+docker pull ghcr.io/flashdim/ws4channels:latest
 ```
 
 Step 2: Run the Container
@@ -175,4 +175,3 @@ About:
 
 A nostalgic weather streaming solution for Channels DVR, built with Node.js, Puppeteer, and FFmpeg.
 
-[Buy me a coffee ☕](https://www.buymeacoffee.com/rice9797)
