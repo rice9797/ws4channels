@@ -1,13 +1,15 @@
 {
   "name": "@flashdim/ws4channels",
   "version": "1.0.0",
-  "main": "index.js",
+  "type": "module",
+  "exports": "./index.js",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
   },
   "dependencies": {
     "express": "^5.2.1",
     "puppeteer": "^25.12.0",
-    "fluent-ffmpeg": "^2.1.3"
+    "fluent-ffmpeg": "^2.1.3",
+    "xvfb": "^0.4.0"
   }
 }

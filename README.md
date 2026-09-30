@@ -21,9 +21,6 @@ docker run -d \
   ghcr.io/netbymatt/ws4kp:latest
 ```
 
-
-
-
 # Known Bugs
 Rare cases of the stream getting 30+ minutes behind and racing to catch up after stream is played long term.
 
@@ -70,19 +67,19 @@ http://ghcr.io/rice9797/ws4channels:latest
 
 Example:
 
- --memory="1096m" --cpus="1.0" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152
+--memory="1096m" --cpus="1.0" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152
 
--1096m=the amount of maximum ram the container can use in mb. 
+--memory=2048m
 
--1.0= maximum amount of cpu cores the container can use. Default is 1 core
+--cpus=2.0
 
--PERMALINK_URL=  Add if you created a permalink within ws4kp, delete this variable if not.
+-e PERMALINK_URL=Add if you created a permalink within ws4kp, delete this variable if not.
 
--63101= enter your zip code
+-e ZIP_CODE=63101
 
--WS4KP_PORT= this is the port you set up WeatherStar4000 container with if you didn’t choose another port that container defaults to 8080.
+-e WS4KP_HOST=myws4kp
 
--WS4KP_HOST= the ip of the machine that WeatherStar4000 container runs on.
+-e WS4KP_PORT=8080
 
 Environment Variables
 
@@ -92,19 +89,38 @@ Environment Variables
  
 	•  WS4KP_PORT: Port for WS4KP (default: 8080)
  
+	•  WS4KP_SCANLINES: Enable scanlines filter (default: false)
+
 	•  --cpus: CPU limit (default: 1.0)
  
 	•  --memory: RAM limit in MB (default: 1096)
  
-	•  FRAME_RATE: Stream frame rate (default: 10)
+	•  VIEW_MODE: One of: `standard`, `wide` (default), `wide-enhanced` or `portrait-enhanced`. These values correspond to the modes available in ws4kp, with the last two only available in ws4kp v7.0+. Video sizes are 640x480, 1280x720 or 720x1280 to match.
+	
+	•  KBPS_BITRATE: Stream bitrate (default: 1000)
+	
+	•  FRAME_RATE: Stream frame rate (default: 15)
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
   
     •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
   
-    •  PERMALINK_URL: Pass configuration parameters via permalink generated from ws4kp
+    •  WS4KP_SCANLINES: Enable scanlines (default: true)
+
+    •  PERMALINK_URL (optional): Pass configuration parameters via permalink generated from ws4kp. You can use that, or the individual settings below.
 	
-	•  VIEW_MODE: One of: `standard`, `wide` (default), `wide-enhanced` or `portrait-enhanced`. These values correspond to the modes available in ws4kp, with the last two only available in ws4kp v7.0+. Video sizes are 640x480, 1280x720 or 720x1280 to match.
+    •  Forecast screens (all optional):
+	   WS4KP_CURRENT_WEATHER: (default: true)
+	   WS4KP_LATEST_OBSERVATIONS: (default: true)
+       WS4KP_HOURLY: (default: true)
+	   WS4KP_HOURLY_GRAPH: (default: false)
+	   WS4KP_TRAVEL: (default: false)
+	   WS4KP_REGIONAL_FORECAST: (default: true)
+	   WS4KP_LOCAL_FORECAST: (default: true)
+	   WS4KP_EXTENDED_FORECAST: (default: true)
+	   WS4KP_ALMANAC: (default: false)
+	   WS4KP_RADAR: (default: true)
+
 
 ## Hardware Acceleration, ARM Multi Arch Support
 
@@ -126,9 +142,6 @@ In Channels DVR, use MPEG-TS format with this URL.
  http://<ip.of.pc.running.ws4channels>:9798/guide.xml
 
 Example: <http://192.168.1.131:9798/guide.xml>
-
-Latest additions
- 6/21/25 Update:
 
 ## Music Configuration
 

@@ -19,10 +19,15 @@ RUN apt-get update && apt-get install -y \
   libxrandr2 \
   libgbm1 \
   libasound2 \
+  xvfb \
+  x11-xkb-utils \
+  libx11-6 \
+  libx11-xcb1 \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY package*.json ./
+RUN npm update
 RUN npm install --verbose
 
 # Copy application code, music, and logo files
@@ -34,3 +39,4 @@ COPY logo/*.png /app/logo/
 # Use STREAM_PORT environment variable for dynamic port
 EXPOSE $STREAM_PORT
 CMD ["node", "index.js"]
+
