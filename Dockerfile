@@ -1,6 +1,6 @@
 FROM node:22
 
-# Install FFmpeg with VAAPI support and Puppeteer dependencies
+# Install FFmpeg and Puppeteer dependencies
 RUN apt-get update && apt-get install -y \
   ffmpeg \
   libva2 \
