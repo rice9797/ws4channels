@@ -70,19 +70,19 @@ http://ghcr.io/rice9797/ws4channels:latest
 
 Example:
 
- --memory="1096m" --cpus="1.0" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152
+--memory="1096m" --cpus="1.0" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152
 
--1096m=the amount of maximum ram the container can use in mb. 
+--memory=2048m
 
--1.0= maximum amount of cpu cores the container can use. Default is 1 core
+--cpus=2.0
 
--PERMALINK_URL=  Add if you created a permalink within ws4kp, delete this variable if not.
+-e PERMALINK_URL=Add if you created a permalink within ws4kp, delete this variable if not.
 
--63101= enter your zip code
+-e ZIP_CODE=63101
 
--WS4KP_PORT= this is the port you set up WeatherStar4000 container with if you didn’t choose another port that container defaults to 8080.
+-e WS4KP_HOST=myws4kp
 
--WS4KP_HOST= the ip of the machine that WeatherStar4000 container runs on.
+-e WS4KP_PORT=8080
 
 Environment Variables
 
