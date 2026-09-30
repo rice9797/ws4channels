@@ -440,7 +440,7 @@ async function startTranscoding() {
 	'-map [v]',
 	'-map [a]',
     '-c:v libx264',
-	'-preset fast',
+	'-preset veryfast',
 	'-c:a aac',
 	'-b:a 128k',
 	'-rc_mode 2',
