@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 COPY package*.json ./
+RUN npm update
 RUN npm install --verbose
 
 # Copy application code, music, and logo files
