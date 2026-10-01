@@ -223,7 +223,8 @@ async function startBrowser(reason = 'initial startup') {
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--disable-software-rasterizer',
-        '--disable-extensions'
+        '--disable-extensions',
+		'--force-prefers-reduced-motion',
       ],
       defaultViewport: null
     });
