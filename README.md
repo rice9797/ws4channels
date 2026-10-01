@@ -93,7 +93,7 @@ services:
       - /opt/ws4kp/music:/usr/share/nginx/html/music
     networks:
       my_network:
-        ipv4_address: 192.168.1.130
+        ipv4_address: 192.168.1.152
     restart: unless-stopped
   ws4channels:
     image: ghcr.io/flashdim/ws4channels:latest
