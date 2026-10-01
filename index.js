@@ -16,11 +16,12 @@ process.setMaxListeners(50);
 
 const app = express();
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
-const VERSION = '2.4'; // version 2.4 - ffmpeg-side logging (segment watchdog, progress tracking, stderr capture); removed capture-side hang watchdog (proven unnecessary)
+const VERSION = 'vGITHUB_RELEASE';
 const ZIP_CODE = process.env.ZIP_CODE || '90210';
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
 const STREAM_PORT = process.env.STREAM_PORT || '9798';
+const WS4KP_FORECAST_CD = process.env.WS4KP_FORECAST_CD || '1.0';
 const WS4KP_SCANLINES = process.env.WS4KP_SCANLINES || false;
 const WS4KP_CURRENT_WEATHER = process.env.WS4KP_CURRENT_WEATHER || true;
 const WS4KP_LATEST_OBSERVATIONS = process.env.WS4KP_LATEST_OBSERVATIONS || true;
@@ -32,7 +33,7 @@ const WS4KP_LOCAL_FORECAST = process.env.WS4KP_LOCAL_FORECAST || true;
 const WS4KP_EXTENDED_FORECAST = process.env.WS4KP_EXTENDED_FORECAST || true;
 const WS4KP_ALMANAC = process.env.WS4KP_ALMANAC || false;
 const WS4KP_RADAR = process.env.WS4KP_RADAR || true;
-const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}?radar=${WS4KP_RADAR}&almanac=${WS4KP_ALMANAC}&extended-forecast=${WS4KP_EXTENDED_FORECAST}&local-forecast=${WS4KP_LOCAL_FORECAST}&regional-forecast=${WS4KP_REGIONAL_FORECAST}&travel=${WS4KP_TRAVEL}&hourly-graph=${WS4KP_HOURLY_GRAPH}&hourly=${WS4KP_HOURLY}&latest-observations=${WS4KP_LATEST_OBSERVATIONS}&current-weather=${WS4KP_CURRENT_WEATHER}&scanLines=${WS4KP_SCANLINES}&spc-outlook=false`;
+const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}?radar=${WS4KP_RADAR}&almanac=${WS4KP_ALMANAC}&extended-forecast=${WS4KP_EXTENDED_FORECAST}&local-forecast=${WS4KP_LOCAL_FORECAST}&regional-forecast=${WS4KP_REGIONAL_FORECAST}&travel=${WS4KP_TRAVEL}&hourly-graph=${WS4KP_HOURLY_GRAPH}&hourly=${WS4KP_HOURLY}&latest-observations=${WS4KP_LATEST_OBSERVATIONS}&current-weather=${WS4KP_CURRENT_WEATHER}&scanLines=${WS4KP_SCANLINES}&speed=${WS4KP_FORECAST_CD}&spc-outlook=false`;
 const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
 const KBPS_BITRATE = process.env.KBPS_BITRATE || '1000';
@@ -453,7 +454,7 @@ async function startTranscoding() {
     ])
 	.output(HLS_FILE)
     .on('start',(cmd)=>{
-		logTS(`Started FFmpeg - Version ${VERSION}`);
+		logTS(`Started FFmpeg`);
 		logTS(`FFmpeg command: ${cmd}`);
 		setTimeout(()=>{
           isStreamReady = true;
@@ -578,7 +579,7 @@ app.get('/health',(req,res)=>{
 });
 
 const { cpus, memoryMB } = getContainerLimits();
-console.log(`Version ${VERSION} | Running with ${cpus} CPU cores, ${memoryMB}MB RAM`);
+console.log(`ws4channels ${VERSION} running with ${cpus} CPU cores, ${memoryMB}MB RAM`);
 
 app.listen(STREAM_PORT, async ()=>{
   console.log(`Streaming server running on port ${STREAM_PORT}`);

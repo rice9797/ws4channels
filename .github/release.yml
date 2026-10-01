@@ -1,0 +1,14 @@
+# .github/release.yml
+
+changelog:
+  exclude:
+    labels:
+      - pipeline
+      - wontfix
+  categories:
+    - title: ✨ Enhancements
+      labels:
+        - enhancement
+    - title: 🪲🔨 Bug Fixes
+      labels:
+        - bug
