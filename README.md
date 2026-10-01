@@ -1,6 +1,6 @@
-# About
+# ws4channels
 
-A nostalgic weather streaming solution for Channels DVR, built with Node.js, Puppeteer, and FFmpeg.
+A Dockerized Node.js application to stream WeatherStar 4000 data into Channels DVR using Puppeteer and FFmpeg.
 
 This requires a netbymatt/ws4k service running to emulate a 90s-style WeatherStar 4000, hosted via http.
 This service creates an M3U video stream of the forecast using Puppeteer to screen cap the page, creates the video with ffmepg, and adds music and XMLTV support.
@@ -30,13 +30,6 @@ docker run -d \
   ghcr.io/netbymatt/ws4kp:latest
 ```
 
-# Known Bugs
-Rare cases of the stream getting 30+ minutes behind and racing to catch up after stream is played long term.
-
-# ws4channels
-
-A Dockerized Node.js application to stream WeatherStar 4000 data into Channels DVR using Puppeteer and FFmpeg.
-
 ## Prerequisites
 
 - 850MB availabe RAM
@@ -46,9 +39,9 @@ A Dockerized Node.js application to stream WeatherStar 4000 data into Channels D
   
 ## Usage
 
-Build and run the container:
+Build and run the container using either method.
 
-# Method 1
+### Method 1
 
 Step 1: Pull the Docker Image
 
@@ -87,7 +80,7 @@ Examples:
 
 -e WS4KP_PORT=8080
 
-# Method 2
+### Method 2
 
 Create or add to a docker-compose.yml file, with ws4kp as an example:
 ```
