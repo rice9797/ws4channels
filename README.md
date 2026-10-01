@@ -91,7 +91,7 @@ Examples:
 
 # Method 2
 
-Step 1: Create or add to a docker-compose.yml file, with ws4kp as an example:
+Create or add to a docker-compose.yml file, with ws4kp as an example:
 ```
 services:
   ws4kp:
