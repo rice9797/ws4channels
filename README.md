@@ -58,8 +58,6 @@ Step 2: Run the Container
 
 Next, run the container using the following command. This will start the container in detached mode and set the required environment variables.
 ```
-bash
-
 docker run -d \
   --name ws4channels \
   --restart unless-stopped \
