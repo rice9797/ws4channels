@@ -16,7 +16,7 @@ process.setMaxListeners(50);
 
 const app = express();
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
-const VERSION = 'vGITHUB_RELEASE';
+const VERSION = 'vAPP_VERSION';
 const ZIP_CODE = process.env.ZIP_CODE || '90210';
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
