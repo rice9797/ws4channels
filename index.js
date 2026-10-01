@@ -579,7 +579,7 @@ app.get('/health',(req,res)=>{
 });
 
 const { cpus, memoryMB } = getContainerLimits();
-console.log(`w4channels ${VERSION} running with ${cpus} CPU cores, ${memoryMB}MB RAM`);
+console.log(`ws4channels ${VERSION} running with ${cpus} CPU cores, ${memoryMB}MB RAM`);
 
 app.listen(STREAM_PORT, async ()=>{
   console.log(`Streaming server running on port ${STREAM_PORT}`);
