@@ -32,7 +32,7 @@ docker run -d \
   ghcr.io/netbymatt/ws4kp:latest
 ```
 
-Step 2: Pull the ws3channels Docker Image:
+Step 2: Pull the ws4channels Docker Image:
 ```
 docker pull ghcr.io/flashdim/ws4channels:latest
 ```
