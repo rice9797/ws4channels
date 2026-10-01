@@ -1,7 +1,16 @@
-# Changes from source repo
+# About
+
+A nostalgic weather streaming solution for Channels DVR, built with Node.js, Puppeteer, and FFmpeg.
 
 This requires a netbymatt/ws4k service running to emulate a 90s-style WeatherStar 4000, hosted via http.
 This service creates an M3U video stream of the forecast using Puppeteer to screen cap the page, creates the video with ffmepg, and adds music and XMLTV support.
+
+### Changes from source repo
+
+This version is forked from: https://github.com/rice9797/ws4channels. It adds ffmpeg screen capturing for improved performance, and extra environment variables.
+
+
+## Directions
 
 Pull ws4kp container.
 
@@ -39,18 +48,17 @@ A Dockerized Node.js application to stream WeatherStar 4000 data into Channels D
 
 Build and run the container:
 
+# Method 1
+
 Step 1: Pull the Docker Image
 
-```bash
-
-docker pull ghcr.io/flashdim/ws4channels:latest
-```
+> docker pull ghcr.io/flashdim/ws4channels:latest
 
 Step 2: Run the Container
 
 Next, run the container using the following command. This will start the container in detached mode and set the required environment variables.
-
-```bash
+```
+bash
 
 docker run -d \
   --name ws4channels \
@@ -62,10 +70,10 @@ docker run -d \
   -e ZIP_CODE=your_zip_code \
   -e WS4KP_HOST=ws4kp_host \
   -e WS4KP_PORT=ws4kp_port \
-http://ghcr.io/rice9797/ws4channels:latest
+http://ghcr.io/flashdim/ws4channels:latest
 ```
 
-Example:
+Examples:
 
 --memory="1096m" --cpus="1.0" -p 9798:9798 -e ZIP_CODE=63101 -e WS4KP_PORT=8080 -e WS4KP_HOST=192.168.1.152
 
@@ -81,38 +89,87 @@ Example:
 
 -e WS4KP_PORT=8080
 
-Environment Variables
+# Method 2
 
-	•  ZIP_CODE: Your ZIP code (default: 90210)
- 
-	•  WS4KP_HOST: Host running WS4KP (default: localhost)
- 
-	•  WS4KP_PORT: Port for WS4KP (default: 8080)
- 
-	•  WS4KP_SCANLINES: Enable scanlines filter (default: false)
+Step 1: Create or add to a docker-compose.yml file:
+```
+services:
+  ws4channels:
+    image: ghcr.io/flashdim/ws4channels:latest
+    container_name: ws4channels
+    devices:
+      - /dev/dri
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - LOG_LEVEL=INFO
+      - TZ=America/Detroit
+      - ZIP_CODE=63101
+      - WS4KP_HOST=ws4kp
+      - WS4KP_PORT=8080
+      - VIEW_MODE=standard
+      - KBPS_BITRATE=1000
+      - FRAME_RATE=15
+      - SHUFFLE_MUSIC=true
+      - WS4KP_FORECAST_CD=1.0
+      - WS4KP_SCANLINES=false
+      - WS4KP_CURRENT_WEATHER=true
+      - WS4KP_LATEST_OBSERVATIONS=true
+      - WS4KP_HOURLY=true
+      - WS4KP_HOURLY_GRAPH=false
+      - WS4KP_TRAVEL=true
+      - WS4KP_REGIONAL_FORECAST=true
+      - WS4KP_LOCAL_FORECAST=true
+      - WS4KP_EXTENDED_FORECAST=true
+      - WS4KP_ALMANAC=true
+      - WS4KP_RADAR=true
+    ports:
+      - 9798:9798
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/ws4kp/music:/app/music
+    networks:
+      my_network:
+        ipv4_address: 192.168.1.131
+    restart: unless-stopped
+```
+
+Then start the container:
+
+> docker compose up
+
+# Environment Variables
 
 	•  --cpus: CPU limit (default: 1.0)
  
 	•  --memory: RAM limit in MB (default: 1096)
  
-	•  VIEW_MODE: One of: `standard`, `wide` (default), `wide-enhanced` or `portrait-enhanced`. These values correspond to the modes available in ws4kp, with the last two only available in ws4kp v7.0+. Video sizes are 640x480, 1280x720 or 720x1280 to match.
-	
 	•  KBPS_BITRATE: Stream bitrate (default: 1000)
-	
+
 	•  FRAME_RATE: Stream frame rate (default: 15)
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
   
-    •  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
+	•  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
   
-    •  WS4KP_SCANLINES: Enable scanlines (default: true)
+	•  PERMALINK_URL (optional): Pass configuration parameters via permalink generated from ws4kp. You can use that, or the individual settings below.
 
-    •  PERMALINK_URL (optional): Pass configuration parameters via permalink generated from ws4kp. You can use that, or the individual settings below.
-	
-    •  Forecast screens (all optional):
+	•  ZIP_CODE: Your ZIP code (default: 90210)
+
+	•  WS4KP_HOST: Host running WS4KP (default: localhost)
+
+	•  WS4KP_PORT: Port for WS4KP (default: 8080)
+
+	•  WS4KP_FORECAST_CD: The cooldown in seconds between forecast screens (default 1.0)
+
+	•  VIEW_MODE: One of: `standard`, `wide` (default), `wide-enhanced` or `portrait-enhanced`. These values correspond to the modes available in ws4kp, with the last two only available in ws4kp v7.0+. Video sizes are 640x480, 1280x720 or 720x1280 to match.
+
+	•  WS4KP_SCANLINES: Enable scanlines filter (default: false)
+
+	•  Forecast screens (all optional):
 	   WS4KP_CURRENT_WEATHER: (default: true)
 	   WS4KP_LATEST_OBSERVATIONS: (default: true)
-       WS4KP_HOURLY: (default: true)
+	   WS4KP_HOURLY: (default: true)
 	   WS4KP_HOURLY_GRAPH: (default: false)
 	   WS4KP_TRAVEL: (default: false)
 	   WS4KP_REGIONAL_FORECAST: (default: true)
@@ -158,20 +215,3 @@ Example: <http://192.168.1.131:9798/guide.xml>
 - To customize, add your own MP3 files to the `music` folder. Only `.mp3` files are included in the stream.
 - If no MP3s are found, the default tracks are used.
 - After adding your mp3 tracks to the music folder restart the container so the app will pick up the new music.
-
- Prior Updates:
-
- -Includes seven looping jazz tracks as background music.
-
--Provides an XMLTV guide with hourly “Local Weather” entries.
-
--Added guide logo
-
--Optimized cropping for a clean video feed by removing white bars.
-
--Changed default cpu and memory limits to 1 cpu core and 1gb ram. Adjust if your system requires.
-
-About:
-
-A nostalgic weather streaming solution for Channels DVR, built with Node.js, Puppeteer, and FFmpeg.
-
