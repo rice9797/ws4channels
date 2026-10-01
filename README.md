@@ -9,20 +9,22 @@ This service creates an M3U video stream of the forecast using Puppeteer to scre
 
 This version is forked from: https://github.com/rice9797/ws4channels. It adds ffmpeg screen capturing for improved performance, and extra environment variables.
 
+## Prerequisites
 
-## Directions
+- 850MB availabe RAM
+- Docker installed
+- WS4KP running and installed
+   https://github.com/netbymatt/ws4kp
 
-Pull ws4kp container.
+## Usage
 
-```bash
+Build and run the container using either method.
 
-docker pull ghcr.io/netbymatt/ws4kp:latest
+### Method 1
+
+Step 1: Pull and run a ws4kp container.
 ```
-
-Run ws4kp container.
-
-```bash
-
+docker pull ghcr.io/netbymatt/ws4kp:latest
 docker run -d \
   --name ws4kp \
   --restart unless-stopped \
@@ -30,24 +32,11 @@ docker run -d \
   ghcr.io/netbymatt/ws4kp:latest
 ```
 
-## Prerequisites
-
-- 850MB availabe RAM
-- Docker installed
-- WS4KP running and installed
-   https://github.com/netbymatt/ws4kp
-  
-## Usage
-
-Build and run the container using either method.
-
-### Method 1
-
-Step 1: Pull the Docker Image
-
-> docker pull ghcr.io/flashdim/ws4channels:latest
-
-Step 2: Run the Container
+Step 2: Pull the ws3channels Docker Image:
+```
+docker pull ghcr.io/flashdim/ws4channels:latest
+```
+Step 3: Run the Container
 
 Next, run the container using the following command. This will start the container in detached mode and set the required environment variables.
 ```
