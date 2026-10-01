@@ -156,8 +156,7 @@ services:
 ```
 
 Then start the container:
-
-> docker compose up
+```docker compose up```
 
 # Environment Variables
 
