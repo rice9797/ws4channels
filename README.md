@@ -91,9 +91,30 @@ Examples:
 
 # Method 2
 
-Step 1: Create or add to a docker-compose.yml file:
+Step 1: Create or add to a docker-compose.yml file, with ws4kp as an example:
 ```
 services:
+  ws4kp:
+    image: ghcr.io/netbymatt/ws4kp
+    container_name: ws4kp
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - TZ=America/Detroit
+      - WSQS_hazards=false
+      - WSQS_spc-outlook=false
+      - WSQS_current_weather=true
+      - WSQS_scanlines=true
+    ports:
+      - 8080:8080
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /opt/ws4kp/music:/usr/share/nginx/html/music
+    networks:
+      my_network:
+        ipv4_address: 192.168.1.130
+    restart: unless-stopped
   ws4channels:
     image: ghcr.io/flashdim/ws4channels:latest
     container_name: ws4channels
@@ -102,7 +123,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - LOG_LEVEL=INFO
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - TZ=America/Detroit
       - ZIP_CODE=63101
       - WS4KP_HOST=ws4kp
