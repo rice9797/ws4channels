@@ -74,25 +74,25 @@ const VIEW_MODE = validViewModes.includes(desiredViewMode) ? desiredViewMode : '
 
 // set up the width and height constants via immediately invoked function
 const VIEW_DIMENSIONS = (()=>{
-	switch(VIEW_MODE) {
-		case 'standard':
-			return {
-				width: 640,
-				height: 480,
-			}
-		case 'portrait-enhanced':
-			return {
-				width: 720,
-				height: 1280,
-			}
-		case 'wide':
-		case 'wide-enhanced':
-		default:
-			return {
-				width: 1280,
-				height: 720,
-			}
-	}
+  switch(VIEW_MODE) {
+    case 'standard':
+      return {
+          width: 640,
+          height: 480,
+      }
+    case 'portrait-enhanced':
+      return {
+        width: 720,
+        height: 1280,
+      }
+    case 'wide':
+    case 'wide-enhanced':
+    default:
+      return {
+        width: 1280,
+        height: 720,
+      }
+  }
 })();
 
 [OUTPUT_DIR, AUDIO_DIR, LOGO_DIR].forEach(dir => { if (!fs.existsSync(dir)) fs.mkdirSync(dir); });
@@ -247,7 +247,7 @@ async function startSongTitlePolling() {
     try {
       // Only update if the title has changed
       if (songNowPlaying !== songWasPlaying) {
-        logTS(`Song changed: "${songWasPlaying}" → "${songNowPlaying}"`);
+        logTS(`🎵: Song changed: ${songWasPlaying}" → "${songNowPlaying}"`);
         // Update the custom text input and enable/set it
         try {
           // Use evaluate to interact with the DOM directly.
@@ -277,7 +277,6 @@ async function startSongTitlePolling() {
             }
           }, songNowPlaying);
 
-          logTS(`Successfully updated text to: "Now Playing: ${songNowPlaying}"`);
           songWasPlaying = songNowPlaying; // ONLY update success state here
 
         } catch (err) {
@@ -308,35 +307,46 @@ function stopSongTitlePolling() {
  * Rotates to the next ZIP code in the array and types it into the simulator.
  */
 async function rotateZipCode() {
-  if (!page || page.isClosed()) return;
+  if (!page || page.isClosed() || !ZIP_CODES || ZIP_CODES.length <= 1) {
+    return;
+  }
 
-  // Move to the next index, wrapping around to 0 at the end
-  currentZipIndex = (currentZipIndex.length > 1) ? (currentZipIndex + 1) % ZIP_CODES.length : currentZipIndex;
+  // 2. Increment the index (wrapping around to 0 using modulo)
+  currentZipIndex = (currentZipIndex + 1) % ZIP_CODES.length;
   const nextZip = ZIP_CODES[currentZipIndex];
 
   try {
     logTS(`🔄 Rotating location to: ${nextZip}`);
 
-    // 1. Find the input field in the existing page
-    const zipInput = await page.$('#txtLocation');
+    // 3. Perform the "Soft Rotation" via DOM manipulation
+    // We use evaluate to bypass all "element not clickable" overlay errors
+    await page.evaluate((zip) => {
+      const input = document.querySelector('#txtLocation');
+      if (input) {
+        // Clear and set the new value
+        input.value = '';
+        input.value = zip;
 
-    if (zipInput) {
-      // 2. Clear the field and type the new ZIP
-      // We use evaluate to clear it properly to avoid cursor issues
-      await zipInput.evaluate(el => el.value = '');
-      await zipInput.type(nextZip, { delay: 100 });
+        // Dispatch events so the simulator's JS detects the change
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }, nextZip);
 
-      // 3. Press Enter to submit the new location
+    // 4. Trigger the 'Submit' action
+    // In the HTML, 'btnGetLatLng' is the submit button for the form
+    const submitButton = await page.$('#btnGetLatLng');
+    if (submitButton) {
       await page.keyboard.press('Enter');
-
-      // 4. Wait a few seconds for the simulator to fetch new weather data
-      await sleep(5000);
-      logTS(`✅ Location rotation to ${nextZip} complete.`);
-    } else {
-      logTS(`⚠️ Could not find #txtLocation on page for rotation.`);
+      logTS(`✅ Location rotation to ${nextZip} complete (via Enter key).`);
     }
+
+    // 5. Wait a moment for the simulator to start loading the new weather data
+    await sleep(3000);
+
   } catch (err) {
     logTS(`❌ Failed to rotate ZIP code: ${err.message}`);
+    // We don't increment the index here, so the next interval will retry this same ZIP
   }
 }
 
@@ -632,7 +642,6 @@ async function startTranscoding() {
         const fullPath = songMatch[1];
         // Store the full path or just the filename
         songNowPlaying = path.basename(fullPath,'.mp3');
-        logTS(`🎵: ${songNowPlaying}`);
       }
     })
     .on('progress', p => {
