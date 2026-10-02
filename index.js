@@ -311,9 +311,7 @@ async function rotateZipCode() {
   if (!page || page.isClosed()) return;
 
   // Move to the next index, wrapping around to 0 at the end
-  currentZipIndex = (current
-  .length > 1) ? (currentZipIndex + 1) % ZIP_CODES.length : currentZipIndex;
-
+  currentZipIndex = (currentZipIndex.length > 1) ? (currentZipIndex + 1) % ZIP_CODES.length : currentZipIndex;
   const nextZip = ZIP_CODES[currentZipIndex];
 
   try {
