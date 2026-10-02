@@ -18,7 +18,7 @@ const app = express();
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
 const VERSION = 'vAPP_VERSION';
 const ZIP_CODES = (process.env.ZIP_CODE || '90210').split(',').map(z => z.trim());
-const ZIP_ROTATION_MINUTES = parseInt(process.env.ZIP_ROTATION_MINUTES || '0', 8);
+const ZIP_ROTATION_MINUTES = parseInt(process.env.ZIP_ROTATION_MINUTES || '8');
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
 const STREAM_PORT = process.env.STREAM_PORT || '9798';
@@ -699,14 +699,13 @@ async function startTranscoding() {
 
 async function stopTranscoding(){
   stopSongTitlePolling();
-  if(captureInterval) clearInterval(captureInterval);
-  captureInterval=null; isStreamReady=false;
+  if(captureInterval) clearInterval(captureInterval); captureInterval=null; isStreamReady=false;
   if(refreshTimer) clearInterval(refreshTimer); refreshTimer=null;
   if(segmentWatchdogInterval) clearInterval(segmentWatchdogInterval); segmentWatchdogInterval=null;
   if(ffmpegProc) ffmpegProc.kill('SIGINT'); ffmpegProc=null;
   if(browser) await browser.close().catch(()=>{}); browser=null;
-  if(xvfb) await xvfb.stop();xvfb=null;
-  if (zipRotationInterval) clearInterval(zipRotationInterval); zipRotationInterval = null;
+  if(xvfb) await xvfb.stop(); xvfb=null;
+  if(zipRotationInterval) clearInterval(zipRotationInterval); zipRotationInterval=null;
 }
 
 app.get('/playlist.m3u',(req,res)=>{
