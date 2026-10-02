@@ -111,6 +111,7 @@ services:
       - VIEW_MODE=standard
       - KBPS_BITRATE=1000
       - FRAME_RATE=15
+      - SHOW_SONG_TITLE=false
       - SHUFFLE_MUSIC=true
       - WS4KP_FORECAST_CD=1.0
       - WS4KP_SCANLINES=false
@@ -149,6 +150,8 @@ Then start the container:
 	•  FRAME_RATE: Stream frame rate (default: 15)
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
+  
+	•  SHOW_SONG_TITLE: Populates the "Custom Text" field in WS4K with the currently playing song. (default: false)
   
 	•  SHUFFLE_MUSIC: Randomize the order in which detected mp3s are played (default: false)
   
@@ -202,16 +205,9 @@ Example: <http://192.168.1.131:9798/guide.xml>
 
 ## Music Configuration
 
-- The application plays MP3 files from the `music` folder in the project root.
-- Default tracks included:
-  - 01 WST26.mp3
-  - 02 WST3.mp3
-  - 03 TB.mp3
-  - 04 LNC.mp3
-  - 05 CF.mp3
-  - 06 WST14.mp3
-  - 07 WST18.mp3
+By default, the application plays MP3 files from the `music` folder in the project root.
   
-- To customize, add your own MP3 files to the `music` folder. Only `.mp3` files are included in the stream.
-- If no MP3s are found, the default tracks are used.
-- After adding your mp3 tracks to the music folder restart the container so the app will pick up the new music.
+To customize, add your own MP3 files to the `music` folder. Only `.mp3` files are included in the stream.
+If no MP3s are found, the default tracks are used.
+After adding your mp3 tracks to the music folder restart the container so the app will pick up the new music.
+

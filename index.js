@@ -22,22 +22,24 @@ const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
 const STREAM_PORT = process.env.STREAM_PORT || '9798';
 const WS4KP_FORECAST_CD = process.env.WS4KP_FORECAST_CD || '1.0';
-const WS4KP_SCANLINES = process.env.WS4KP_SCANLINES || false;
-const WS4KP_CURRENT_WEATHER = process.env.WS4KP_CURRENT_WEATHER || true;
-const WS4KP_LATEST_OBSERVATIONS = process.env.WS4KP_LATEST_OBSERVATIONS || true;
-const WS4KP_HOURLY = process.env.WS4KP_HOURLY || true;
-const WS4KP_HOURLY_GRAPH = process.env.WS4KP_HOURLY_GRAPH || false;
-const WS4KP_TRAVEL = process.env.WS4KP_TRAVEL || false;
+const WS4KP_SCANLINES = process.env.WS4KP_SCANLINES.toLowerCase() === 'true' || false;
+const WS4KP_CURRENT_WEATHER = process.env.WS4KP_CURRENT_WEATHER.toLowerCase() === 'true' || true;
+const WS4KP_LATEST_OBSERVATIONS = process.env.WS4KP_LATEST_OBSERVATIONS.toLowerCase() === 'true' || true;
+const WS4KP_HOURLY = process.env.WS4KP_HOURLY.toLowerCase() === 'true' || true;
+const WS4KP_HOURLY_GRAPH = process.env.WS4KP_HOURLY_GRAPH.toLowerCase() === 'true' || false;
+const WS4KP_TRAVEL = process.env.WS4KP_TRAVEL.toLowerCase() === 'true' || false;
 const WS4KP_REGIONAL_FORECAST = process.env.WS4KP_REGIONAL_FORECAST || true;
-const WS4KP_LOCAL_FORECAST = process.env.WS4KP_LOCAL_FORECAST || true;
-const WS4KP_EXTENDED_FORECAST = process.env.WS4KP_EXTENDED_FORECAST || true;
-const WS4KP_ALMANAC = process.env.WS4KP_ALMANAC || false;
-const WS4KP_RADAR = process.env.WS4KP_RADAR || true;
+const WS4KP_LOCAL_FORECAST = process.env.WS4KP_LOCAL_FORECAST.toLowerCase() === 'true' || true;
+const WS4KP_EXTENDED_FORECAST = process.env.WS4KP_EXTENDED_FORECAST.toLowerCase() === 'true' || true;
+const WS4KP_ALMANAC = process.env.WS4KP_ALMANAC.toLowerCase() === 'true' || false;
+const WS4KP_RADAR = process.env.WS4KP_RADAR.toLowerCase() === 'true' || true;
 const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}?radar=${WS4KP_RADAR}&almanac=${WS4KP_ALMANAC}&extended-forecast=${WS4KP_EXTENDED_FORECAST}&local-forecast=${WS4KP_LOCAL_FORECAST}&regional-forecast=${WS4KP_REGIONAL_FORECAST}&travel=${WS4KP_TRAVEL}&hourly-graph=${WS4KP_HOURLY_GRAPH}&hourly=${WS4KP_HOURLY}&latest-observations=${WS4KP_LATEST_OBSERVATIONS}&current-weather=${WS4KP_CURRENT_WEATHER}&scanLines=${WS4KP_SCANLINES}&speed=${WS4KP_FORECAST_CD}&spc-outlook=false`;
 const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
 const KBPS_BITRATE = process.env.KBPS_BITRATE || '1000';
 const FRAME_RATE = Number(process.env.FRAME_RATE) || 15;
+const SHUFFLE_MUSIC = process.env.SHUFFLE_MUSIC.toLowerCase() === 'true' || false;
+const SHOW_SONG_TITLE = process.env.SHOW_SONG_TITLE?.toLowerCase() === 'true' || false;
 const HLS_SEGMENT_SECONDS = 2;
 const sleep = (waitTimeInMs) => new Promise(resolve => setTimeout(resolve, waitTimeInMs));
 
@@ -52,6 +54,9 @@ const BROWSER_REFRESH_MINUTES = parseInt(process.env.BROWSER_REFRESH_MINUTES || 
 const SEGMENT_STALL_WARN_MS = 8000;
 const SEGMENT_CHECK_INTERVAL_MS = 2000;
 const STDERR_BUFFER_LINES = 40;
+
+// Song title polling interval (ms)
+const SONG_TITLE_POLL_INTERVAL_MS = 1000;
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const AUDIO_DIR = path.join(__dirname, 'music');
@@ -101,9 +106,12 @@ let captureProcess = null;
 let captureInterval = null;
 let refreshTimer = null;
 let segmentWatchdogInterval = null;
+let songTitlePollingInterval = null;
 let isStreamReady = false;
 let xvfb = null;
 let lastLoggedTime = null;
+let songNowPlaying = 'Starting stream...';
+let songWasPlaying = 'Starting stream...';
 
 // --- State for backpressure + overlap protection + restart diagnostics ---
 let isCapturing = false;         // prevents overlapping capture calls
@@ -174,12 +182,12 @@ function createAudioInputFile() {
   }
   
   // Shuffle if requested
-  if (process.env.SHUFFLE_MUSIC?.toLowerCase() === 'true') {
+  if (SHUFFLE_MUSIC) {
     files = shuffleArray(files);
-    console.log('Shuffled music list based on SHUFFLE_MUSIC=true');
+    logTS('Shuffled music list based on SHUFFLE_MUSIC=true');
   }
 
-  console.log(`Loaded ${files.length} music files`);
+  logTS(`Loaded ${files.length} music files`);
   const audioList = files.map(file => `file '${path.join(AUDIO_DIR, file)}'`).join('\n');
   fs.writeFileSync(path.join(__dirname, 'audio_list.txt'), audioList);
 
@@ -214,6 +222,85 @@ function generateXMLTV(host) {
   return xml;
 }
 
+/**
+ * Polls for song title changes and updates the custom text crawl in WS4KP.
+ * Runs at SONG_TITLE_POLL_INTERVAL_MS and updates only when the title changes.
+ */
+async function startSongTitlePolling() {
+  if (songTitlePollingInterval) clearInterval(songTitlePollingInterval);
+  if (!SHOW_SONG_TITLE || !page || page.isClosed()) {
+    return;
+  }
+
+  logTS('Starting song title polling');
+  songTitlePollingInterval = setInterval(async () => {
+    if (!page || page.isClosed()) {
+      logTS('Page closed, stopping song title polling');
+      if (songTitlePollingInterval) clearInterval(songTitlePollingInterval);
+      songTitlePollingInterval = null;
+      return;
+    }
+
+    try {
+      // Only update if the title has changed
+      if (songNowPlaying !== songWasPlaying) {
+        logTS(`Song changed: "${songWasPlaying}" → "${songNowPlaying}"`);
+        // Update the custom text input and enable/set it
+        try {
+          // Use evaluate to interact with the DOM directly.
+          // This bypasss all "Node is not clickable" and "Overlay" errors.
+          await page.evaluate((songName) => {
+            const checkbox = document.querySelector('#settings-customTextEnable-checkbox');
+            const textInput = document.querySelector('#settings-customText-string');
+            const setButton = document.querySelector('#settings-customText-button');
+
+            if (checkbox) {
+              // Force the checkbox to be checked via JS
+              checkbox.checked = true;
+              // Trigger events so the simulator's internal logic knows it changed
+              checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            if (textInput) {
+              // Set the value directly
+              textInput.value = 'Now Playing: ' + songName;
+              textInput.dispatchEvent(new Event('input', { bubbles: true }));
+              textInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            if (setButton) {
+              // Click the button via JS (ignores overlays)
+              setButton.click();
+            }
+          }, songNowPlaying);
+
+          logTS(`Successfully updated text to: "Now Playing: ${songNowPlaying}"`);
+          songWasPlaying = songNowPlaying; // ONLY update success state here
+
+        } catch (err) {
+          logTS(`Failed to update custom text: ${err.message}`);
+        }
+      }
+    } catch (err) {
+      // Silently catch errors during polling to avoid spam; log only serious issues
+      if (!err.message.includes('Target page, context or browser has been closed')) {
+        logTS(`Song title polling error: ${err.message}`);
+      }
+    }
+  }, SONG_TITLE_POLL_INTERVAL_MS);
+}
+
+/**
+ * Stops the song title polling interval.
+ */
+function stopSongTitlePolling() {
+  if (songTitlePollingInterval) {
+    clearInterval(songTitlePollingInterval);
+    songTitlePollingInterval = null;
+    logTS('Song title polling stopped');
+  }
+}
+
 async function startBrowser(reason = 'initial startup') {
   // Hard lock: only one browser launch can be in progress at a time.
   if (isRestartingBrowser) {
@@ -223,6 +310,9 @@ async function startBrowser(reason = 'initial startup') {
   isRestartingBrowser = true;
 
   try {
+    // Stop song title polling before browser restart
+    stopSongTitlePolling();
+
     browserRestartCount++;
     if(xvfb) await xvfb.stop();
     xvfb = await new Xvfb ({
@@ -248,15 +338,17 @@ async function startBrowser(reason = 'initial startup') {
         '--disable-dev-shm-usage',
         '--disable-extensions',
         '--start-fullscreen',
+        '--autoplay-policy=no-user-gesture-required',
         `--display=${xvfb._display}`
       ],
       defaultViewport: null
     });
     page = await browser.newPage();
     if (PERMALINK_URL) {
-      console.log(`Using custom permalink URL: ${PERMALINK_URL}`);
+      logTS(`Using custom permalink URL: ${PERMALINK_URL}`);
       await page.goto(PERMALINK_URL, { waitUntil: 'networkidle2', timeout: 30000 });
     } else {
+      logTS(`Using URL: ${WS4KP_URL}`);
       await page.goto(WS4KP_URL, { waitUntil: 'networkidle2', timeout: 30000 });
       try {
         const zipInput = await page.waitForSelector('input[placeholder="Zip or City, State"], input', { timeout: 5000 });
@@ -324,6 +416,12 @@ async function startBrowser(reason = 'initial startup') {
     // Reset capture guards after a fresh browser/page is ready.
     isCapturing = false;
     captureStartedAt = null;
+    
+    // Start song title polling if enabled
+    if (SHOW_SONG_TITLE) {
+      await startSongTitlePolling();
+    }
+    
     logTS(`Browser ready (launch #${browserRestartCount})`);
   } finally {
     isRestartingBrowser = false;
@@ -337,8 +435,15 @@ function scheduleBrowserRefresh() {
     return;
   }
   logTS(`Scheduled browser refresh enabled: every ${BROWSER_REFRESH_MINUTES} minute(s)`);
-  refreshTimer = setInterval(() => {
-    startBrowser(`scheduled refresh (${BROWSER_REFRESH_MINUTES}m interval)`);
+  refreshTimer = setInterval(async () => {
+    try {
+      logTS('Restarting transcoding after scheduled browser refresh');
+
+      await stopTranscoding();
+      await startTranscoding();
+    } catch (err) {
+      console.error(`Scheduled refresh failed: ${err.message}`);
+    }
   }, BROWSER_REFRESH_MINUTES * 60 * 1000);
 }
 
@@ -361,7 +466,7 @@ function dumpFfmpegDiagnostics(gapMs) {
     logTS('(no ffmpeg stderr output captured yet)');
   } else {
     logTS(`Last ${stderrBuffer.length} ffmpeg stderr line(s):`);
-    stderrBuffer.forEach(line => console.log(`  ffmpeg: ${line}`));
+    stderrBuffer.forEach(line => logTS(`  ffmpeg: ${line}`));
   }
 }
 
@@ -414,6 +519,7 @@ function startSegmentWatchdog() {
 
 async function startTranscoding() {
   await startBrowser('initial startup');
+
   createAudioInputFile();
   scheduleBrowserRefresh();
 
@@ -422,49 +528,58 @@ async function startTranscoding() {
   lastProgressAt = null;
 
   ffmpegProc = ffmpeg()
-    .input(xvfb._display+'.0')
+    .input(xvfb._display + '.0')
     .inputOptions([
       '-f x11grab',
       `-framerate ${FRAME_RATE}`
     ])
-    .input(path.join(__dirname,'audio_list.txt'))
+    .input(path.join(__dirname, 'audio_list.txt'))
     .inputOptions([
       '-f concat',
       '-safe 0',
-	  '-stream_loop -1'
+      '-stream_loop -1',
+      '-loglevel debug'
     ])
     .complexFilter([
       `[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v]`,
       '[1:a]aresample=48000,volume=0.5[a]'
     ])
     .outputOptions([
-	'-map [v]',
-	'-map [a]',
-    '-c:v libx264',
-	'-preset veryfast',
-	'-c:a aac',
-	'-b:a 128k',
-	'-rc_mode 2',
-	`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,
-	`-b:v ${KBPS_BITRATE}k`,
-	'-f hls',
-	`-hls_time ${HLS_SEGMENT_SECONDS}`,
-	'-hls_list_size 6',
-	'-hls_flags delete_segments'
+      '-map [v]',
+      '-map [a]',
+      '-c:v libx264',
+      '-preset veryfast',
+      '-c:a aac',
+      '-b:a 128k',
+      '-rc_mode 2',
+      `-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,
+      `-b:v ${KBPS_BITRATE}k`,
+      '-f hls',
+      `-hls_time ${HLS_SEGMENT_SECONDS}`,
+      '-hls_list_size 6',
+      '-hls_flags delete_segments'
     ])
-	.output(HLS_FILE)
+    .output(HLS_FILE)
     .on('start',(cmd)=>{
-		logTS(`Started FFmpeg`);
-		logTS(`FFmpeg command: ${cmd}`);
-		setTimeout(()=>{
-          isStreamReady = true;
-          isCapturing = true;
-          captureStartedAt = Date.now();
-        },HLS_SETUP_DELAY);
-	})
+      logTS(`Started FFmpeg`);
+      logTS(`FFmpeg command: ${cmd}`);
+      setTimeout(()=>{
+        isStreamReady = true;
+        isCapturing = true;
+        captureStartedAt = Date.now();
+      },HLS_SETUP_DELAY);
+    })
     .on('stderr', line => {
-      stderrBuffer.push(line);
-      if (stderrBuffer.length > STDERR_BUFFER_LINES) stderrBuffer.shift();
+      // Parse the line for the "Opening" event
+      // FFmpeg logs: [concat @ 0x...] Opening '/app/music/Song.mp3'
+      const songMatch = line.match(/Opening '(.+?)'/);
+
+      if (songMatch && songMatch[1].endsWith('.mp3')) {
+        const fullPath = songMatch[1];
+        // Store the full path or just the filename
+        songNowPlaying = path.basename(fullPath,'.mp3');
+        logTS(`🎵: ${songNowPlaying}`);
+      }
     })
     .on('progress', p => {
       lastProgress = p;
@@ -491,7 +606,6 @@ async function startTranscoding() {
       logTS(`FFmpeg error: ${err.message}`);
       await stopTranscoding();
       startTranscoding();
-
     })
     .on('end',()=>{
       ffmpegProc = null;
@@ -530,6 +644,7 @@ async function startTranscoding() {
 }
 
 async function stopTranscoding(){
+  stopSongTitlePolling();
   if(captureInterval) clearInterval(captureInterval);
   captureInterval=null; isStreamReady=false;
   if(refreshTimer) clearInterval(refreshTimer); refreshTimer=null;
@@ -579,12 +694,12 @@ app.get('/health',(req,res)=>{
 });
 
 const { cpus, memoryMB } = getContainerLimits();
-console.log(`ws4channels ${VERSION} running with ${cpus} CPU cores, ${memoryMB}MB RAM`);
+logTS(`ws4channels ${VERSION} running with ${cpus} CPU cores, ${memoryMB}MB RAM`);
 
 app.listen(STREAM_PORT, async ()=>{
-  console.log(`Streaming server running on port ${STREAM_PORT}`);
+  logTS(`Streaming server running on port ${STREAM_PORT}`);
   await startTranscoding();
 });
 
-process.on('SIGINT', async ()=>{ console.log('SIGINT received'); await stopTranscoding(); process.exit(); });
-process.on('SIGTERM', async ()=>{ console.log('SIGTERM received'); await stopTranscoding(); process.exit(); });
+process.on('SIGINT', async ()=>{ logTS('SIGINT received'); await stopTranscoding(); process.exit(); });
+process.on('SIGTERM', async ()=>{ logTS('SIGTERM received'); await stopTranscoding(); process.exit(); });

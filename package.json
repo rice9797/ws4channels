@@ -11,5 +11,9 @@
     "puppeteer": "^25.12.0",
     "fluent-ffmpeg": "^2.1.3",
     "xvfb": "^0.4.0"
+  },
+  "allowScripts": {
+    "puppeteer@25.12.0": true,
+    "sleep@6.1.0": true
   }
 }
