@@ -17,7 +17,8 @@ process.setMaxListeners(50);
 const app = express();
 const __dirname = path.dirname(new URL(import.meta.url).pathname)
 const VERSION = 'vAPP_VERSION';
-const ZIP_CODE = process.env.ZIP_CODE || '90210';
+const ZIP_CODES = (process.env.ZIP_CODE || '90210').split(',').map(z => z.trim());
+const ZIP_ROTATION_MINUTES = parseInt(process.env.ZIP_ROTATION_MINUTES || '0', 8);
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
 const STREAM_PORT = process.env.STREAM_PORT || '9798';
@@ -112,6 +113,8 @@ let xvfb = null;
 let lastLoggedTime = null;
 let songNowPlaying = 'Starting stream...';
 let songWasPlaying = 'Starting stream...';
+let currentZipIndex = 0;
+let zipRotationInterval = null;
 
 // --- State for backpressure + overlap protection + restart diagnostics ---
 let isCapturing = false;         // prevents overlapping capture calls
@@ -299,6 +302,58 @@ function stopSongTitlePolling() {
     songTitlePollingInterval = null;
     logTS('Song title polling stopped');
   }
+}
+
+/**
+ * Rotates to the next ZIP code in the array and types it into the simulator.
+ */
+async function rotateZipCode() {
+  if (!page || page.isClosed()) return;
+
+  // Move to the next index, wrapping around to 0 at the end
+  currentZipIndex = (current
+  .length > 1) ? (currentZipIndex + 1) % ZIP_CODES.length : currentZipIndex;
+
+  const nextZip = ZIP_CODES[currentZipIndex];
+
+  try {
+    logTS(`🔄 Rotating location to: ${nextZip}`);
+
+    // 1. Find the input field in the existing page
+    const zipInput = await page.$('#txtLocation');
+
+    if (zipInput) {
+      // 2. Clear the field and type the new ZIP
+      // We use evaluate to clear it properly to avoid cursor issues
+      await zipInput.evaluate(el => el.value = '');
+      await zipInput.type(nextZip, { delay: 100 });
+
+      // 3. Press Enter to submit the new location
+      await page.keyboard.press('Enter');
+
+      // 4. Wait a few seconds for the simulator to fetch new weather data
+      await sleep(5000);
+      logTS(`✅ Location rotation to ${nextZip} complete.`);
+    } else {
+      logTS(`⚠️ Could not find #txtLocation on page for rotation.`);
+    }
+  } catch (err) {
+    logTS(`❌ Failed to rotate ZIP code: ${err.message}`);
+  }
+}
+
+function startZipRotation() {
+  if (zipRotationInterval) clearInterval(zipRotationInterval);
+  if (ZIP_ROTATION_MINUTES <= 0) {
+    logTS('ZIP rotation disabled (ZIP_ROTATION_MINUTES not set)');
+    return;
+  }
+
+  logTS(`ZIP rotation enabled: every ${ZIP_ROTATION_MINUTES} minute(s). List: [${ZIP_CODES.join(', ')}]`);
+
+  zipRotationInterval = setInterval(async () => {
+    await rotateZipCode();
+  }, ZIP_ROTATION_MINUTES * 60 * 1000);
 }
 
 async function startBrowser(reason = 'initial startup') {
@@ -522,6 +577,7 @@ async function startTranscoding() {
 
   createAudioInputFile();
   scheduleBrowserRefresh();
+  startZipRotation();
 
   stderrBuffer = [];
   lastProgress = null;
@@ -651,7 +707,8 @@ async function stopTranscoding(){
   if(segmentWatchdogInterval) clearInterval(segmentWatchdogInterval); segmentWatchdogInterval=null;
   if(ffmpegProc) ffmpegProc.kill('SIGINT'); ffmpegProc=null;
   if(browser) await browser.close().catch(()=>{}); browser=null;
-  if(xvfb) await xvfb.stop(); xvfb=null;
+  if(xvfb) await xvfb.stop();xvfb=null;
+  if (zipRotationInterval) clearInterval(zipRotationInterval); zipRotationInterval = null;
 }
 
 app.get('/playlist.m3u',(req,res)=>{

@@ -105,7 +105,8 @@ services:
       - PGID=${PGID}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - TZ=America/Detroit
-      - ZIP_CODE=63101
+      - ZIP_CODE=63101,90210
+      - ZIP_ROTATION_MINUTES=8
       - WS4KP_HOST=ws4kp
       - WS4KP_PORT=8080
       - VIEW_MODE=standard
@@ -157,7 +158,9 @@ Then start the container:
   
 	•  PERMALINK_URL (optional): Pass configuration parameters via permalink generated from ws4kp. You can use that, or the individual settings below.
 
-	•  ZIP_CODE: Your ZIP code (default: 90210)
+	•  ZIP_CODE: Your ZIP code, or a list of ZIP codes (default: 90210)
+
+	•  ZIP_ROTATION_MINUTES: Duration of forecasts for one ZIP code (default: 8)
 
 	•  WS4KP_HOST: Host running WS4KP (default: localhost)
 
