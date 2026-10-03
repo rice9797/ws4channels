@@ -223,7 +223,8 @@ async function startBrowser(reason = 'initial startup') {
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--disable-software-rasterizer',
-        '--disable-extensions'
+        '--disable-extensions',
+		'--force-prefers-reduced-motion',
       ],
       defaultViewport: null
     });
@@ -286,11 +287,12 @@ async function startBrowser(reason = 'initial startup') {
 
       }
       finally {
-        // both 6.x and 7.x support kiosk as a checkbox
-        // and now for kiosk
-        const kioskCheckbox = await page.waitForSelector('#settings-kiosk-checkbox');    // set the checkbox
-        const kioskChecked = await kioskCheckbox.evaluate((el) => el.checked);
-        if (!kioskChecked) await kioskCheckbox.click();
+		// 6.x, 7.x and 8.x support kiosk as a checkbox
+		// and now for kiosk
+		const kioskCheckbox = await workingPage.waitForSelector('#settings-kiosk-checkbox'); // set the checkbox
+		// click via the DOM rather than ElementHandle.click(), which dispatches a mouse event at the
+		// element's screen coordinates and silently misses if the layout shifts or something overlays it
+		await kioskCheckbox.evaluate((el) => { if (!el.checked) el.click(); });
       }
     }
     await page.setViewport({ ...VIEW_DIMENSIONS });
