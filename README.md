@@ -1,5 +1,7 @@
 # Latest Update
 
+10/03/2026 version2.5  Added updates for upcoming Ws4kp v8.0 update
+
 08/31/2026 version2.4 - Added ffmpeg-side logging (segment watchdog, progress tracking, stderr capture); removed capture-side hang watchdog (proven unnecessary).
 
 08/16/2026 version2.3 Added more logging.  Added another attempt to fix rare stream being more than 3 minutes behind and racing catchup. 
@@ -37,7 +39,7 @@ docker run -d \
 
 
 # Known Bugs
-Rare cases of the stream getting 30+ minutes behind and racing to catch up after stream is played long term.
+Rare cases of the stream stuttering or falling behind and racing to catch up after stream is played long term. If you encounter this use environment variable FRAME_RATE=3 
 
 # ws4channels
 

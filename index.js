@@ -14,7 +14,7 @@ process.setMaxListeners(50);
 
 const app = express();
 
-const VERSION = '2.4'; // version 2.4 - ffmpeg-side logging (segment watchdog, progress tracking, stderr capture); removed capture-side hang watchdog (proven unnecessary)
+const VERSION = '2.5'; // version 2.5 - Ws4kp v8.0 updates
 const ZIP_CODE = process.env.ZIP_CODE || '90210';
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
