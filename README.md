@@ -1,5 +1,6 @@
 # Latest Update
 
+10/03/2026 version2.5.1 - fix kiosk step (workingPage -> page)
 10/03/2026 version2.5  Added updates for upcoming Ws4kp v8.0 update
 
 08/31/2026 version2.4 - Added ffmpeg-side logging (segment watchdog, progress tracking, stderr capture); removed capture-side hang watchdog (proven unnecessary).

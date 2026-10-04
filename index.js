@@ -14,7 +14,7 @@ process.setMaxListeners(50);
 
 const app = express();
 
-const VERSION = '2.5'; // version 2.5 - Ws4kp v8.0 updates
+const VERSION = '2.5.1'; // version 2.5.1 - fix kiosk step (workingPage -> page)
 const ZIP_CODE = process.env.ZIP_CODE || '90210';
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
@@ -289,10 +289,14 @@ async function startBrowser(reason = 'initial startup') {
       finally {
 		// 6.x, 7.x and 8.x support kiosk as a checkbox
 		// and now for kiosk
-		const kioskCheckbox = await workingPage.waitForSelector('#settings-kiosk-checkbox'); // set the checkbox
-		// click via the DOM rather than ElementHandle.click(), which dispatches a mouse event at the
-		// element's screen coordinates and silently misses if the layout shifts or something overlays it
-		await kioskCheckbox.evaluate((el) => { if (!el.checked) el.click(); });
+		try {
+		  const kioskCheckbox = await page.waitForSelector('#settings-kiosk-checkbox', { timeout: 10000 }); // set the checkbox
+		  // click via the DOM rather than ElementHandle.click(), which dispatches a mouse event at the
+		  // element's screen coordinates and silently misses if the layout shifts or something overlays it
+		  await kioskCheckbox.evaluate((el) => { if (!el.checked) el.click(); });
+		} catch (err) {
+		  logTS(`Could not set kiosk mode (continuing anyway): ${err.message}`);
+		}
       }
     }
     await page.setViewport({ ...VIEW_DIMENSIONS });
