@@ -14,7 +14,7 @@ process.setMaxListeners(50);
 
 const app = express();
 
-const VERSION = '2.5.1'; // version 2.5.1 - fix kiosk step (workingPage -> page)
+const VERSION = '2.5.2'; // version 2.5.2 - try to fix stream stalls
 const ZIP_CODE = process.env.ZIP_CODE || '90210';
 const WS4KP_HOST = process.env.WS4KP_HOST || 'localhost';
 const WS4KP_PORT = process.env.WS4KP_PORT || '8080';
@@ -408,11 +408,11 @@ async function startTranscoding() {
   ffmpegProc = ffmpeg()
     .input(ffmpegStream)
     .inputFormat('image2pipe')
-    .inputOptions([`-framerate ${FRAME_RATE}`,'-use_wallclock_as_timestamps 1'])
+    .inputOptions([`-framerate ${FRAME_RATE}`])
     .input(path.join(__dirname,'audio_list.txt'))
     .inputOptions(['-f concat','-safe 0','-stream_loop -1','-vcodec png'])
     .complexFilter([`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v]`,'[1:a]volume=0.5[a]'])
-    .outputOptions(['-map [v]','-map [a]','-fps_mode cfr',`-r ${FRAME_RATE}`,'-c:v libx264','-c:a aac','-b:a 128k','-preset ultrafast',`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,'-b:v 1000k','-f hls',`-hls_time ${HLS_SEGMENT_SECONDS}`,'-hls_list_size 2','-hls_flags delete_segments'])
+    .outputOptions(['-map [v]','-map [a]','-c:v libx264','-c:a aac','-b:a 128k','-preset ultrafast',`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,'-b:v 1000k','-f hls',`-hls_time ${HLS_SEGMENT_SECONDS}`,'-hls_list_size 2','-hls_flags delete_segments'])
     .output(HLS_FILE)
     .on('start',(cmd)=>{ logTS(`Started FFmpeg - Version ${VERSION}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
     .on('stderr', line => {

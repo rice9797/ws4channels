@@ -1,5 +1,7 @@
 # Latest Update
 
+10/21/2026 version2.5.2 Added another attempt to fix rare stream freezes
+
 10/03/2026 version2.5.1 - fix kiosk step (workingPage -> page)
 10/03/2026 version2.5  Added updates for upcoming Ws4kp v8.0 update
 
@@ -41,6 +43,7 @@ docker run -d \
 
 # Known Bugs
 Rare cases of the stream stuttering or falling behind and racing to catch up after stream is played long term. If you encounter this use environment variable FRAME_RATE=3 
+Version 2.5.2 is another attempt to fix this issue. 
 
 # ws4channels
 
