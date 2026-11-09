@@ -24,7 +24,7 @@ const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
 // Video encoder options passed straight to ffmpeg, e.g. "-c:v h264_qsv -b:v 1000k" (#39)
-const VIDEO_OPTIONS = (process.env.VIDEO_OPTIONS || '-c:v libx264 -preset ultrafast -b:v 1000k').trim().split(/\s+/);
+const VIDEO_OPTIONS = (process.env.VIDEO_OPTIONS || '-c:v libx264 -preset ultrafast -pix_fmt yuv420p -b:v 1000k').trim().split(/\s+/);
 const HLS_SEGMENT_SECONDS = 2;
 
 // Optional proactive browser refresh. If set to a number > 0, the browser

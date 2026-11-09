@@ -116,7 +116,7 @@ Environment Variables
  
 	•  FRAME_RATE: Stream frame rate (default: 10)
 
-	•  VIDEO_OPTIONS: ffmpeg video encoder options (default: `-c:v libx264 -preset ultrafast -b:v 1000k`). Replaces the whole default, e.g. `-c:v h264_qsv -b:v 1000k` for Intel QuickSync (needs `/dev/dri` passed through; drop `-preset ultrafast`, QSV rejects it).
+	•  VIDEO_OPTIONS: ffmpeg video encoder options (default: `-c:v libx264 -preset ultrafast -pix_fmt yuv420p -b:v 1000k`). Replaces the whole default, e.g. `-c:v h264_qsv -b:v 1000k` for Intel QuickSync (needs `/dev/dri` passed through; drop `-preset ultrafast`, QSV rejects it).
 
 	•  CHANNEL_NUMBER: Sets the channel number (default: 275)
   
