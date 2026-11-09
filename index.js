@@ -23,6 +23,8 @@ const WS4KP_URL = `http://${WS4KP_HOST}:${WS4KP_PORT}`;
 const PERMALINK_URL = process.env.PERMALINK_URL || null;
 const HLS_SETUP_DELAY = 2000;
 const FRAME_RATE = process.env.FRAME_RATE || 10;
+// Video encoder options passed straight to ffmpeg, e.g. "-c:v h264_qsv -b:v 1000k" (#39)
+const VIDEO_OPTIONS = (process.env.VIDEO_OPTIONS || '-c:v libx264 -preset ultrafast -pix_fmt yuv420p -b:v 1000k').trim().split(/\s+/);
 const HLS_SEGMENT_SECONDS = 2;
 
 // Optional proactive browser refresh. If set to a number > 0, the browser
@@ -412,7 +414,7 @@ async function startTranscoding() {
     .input(path.join(__dirname,'audio_list.txt'))
     .inputOptions(['-f concat','-safe 0','-stream_loop -1','-vcodec png'])
     .complexFilter([`[0:v]scale=${VIEW_DIMENSIONS.width}:${VIEW_DIMENSIONS.height}[v]`,'[1:a]volume=0.5[a]'])
-    .outputOptions(['-map [v]','-map [a]','-fps_mode cfr',`-r ${FRAME_RATE}`,'-c:v libx264','-c:a aac','-b:a 128k','-preset ultrafast',`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,'-b:v 1000k','-f hls',`-hls_time ${HLS_SEGMENT_SECONDS}`,'-hls_list_size 2','-hls_flags delete_segments'])
+    .outputOptions(['-map [v]','-map [a]','-fps_mode cfr',`-r ${FRAME_RATE}`,...VIDEO_OPTIONS,'-c:a aac','-b:a 128k',`-g ${FRAME_RATE * HLS_SEGMENT_SECONDS}`,'-f hls',`-hls_time ${HLS_SEGMENT_SECONDS}`,'-hls_list_size 2','-hls_flags delete_segments'])
     .output(HLS_FILE)
     .on('start',(cmd)=>{ logTS(`Started FFmpeg - Version ${VERSION}`); setTimeout(()=>isStreamReady=true,HLS_SETUP_DELAY); })
     .on('stderr', line => {
